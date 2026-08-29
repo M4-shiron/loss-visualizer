@@ -7,12 +7,13 @@ describe('seed/general_comparisons.json の読み込み', () => {
     expect(GENERAL_COMPARISONS.length).toBeLessThanOrEqual(100)
   })
 
-  it('すべての項目が id・name・price(正の数)・category を持つ', () => {
+  it('すべての項目が id・name・price(正の数)・category・unit を持つ', () => {
     for (const item of GENERAL_COMPARISONS) {
       expect(typeof item.id).toBe('string')
       expect(typeof item.name).toBe('string')
       expect(item.price).toBeGreaterThan(0)
       expect(typeof item.category).toBe('string')
+      expect(item.unit.length).toBeGreaterThan(0)
     }
   })
 

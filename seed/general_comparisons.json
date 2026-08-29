@@ -2,66 +2,432 @@
   "version": 1,
   "description": "学生〜若手社会人が金額の意味を想像しやすくするための目安データ。厳密な市場価格ではない。",
   "items": [
-    {"id":"coffee-can","name":"缶コーヒー","price":130,"category":"food"},
-    {"id":"rice-ball","name":"おにぎり","price":150,"category":"food"},
-    {"id":"ice-cream","name":"コンビニアイス","price":180,"category":"food"},
-    {"id":"snack","name":"お菓子一袋","price":250,"category":"food"},
-    {"id":"cafe-drink","name":"カフェのドリンク","price":450,"category":"food"},
-    {"id":"lunch","name":"外食ランチ","price":800,"category":"food"},
-    {"id":"dessert","name":"少し良いスイーツ","price":1200,"category":"food"},
-    {"id":"ramen","name":"ラーメン一杯","price":1000,"category":"food"},
-    {"id":"family-restaurant","name":"ファミレスの食事","price":1500,"category":"food"},
-    {"id":"yakiniku","name":"焼肉一回","price":4000,"category":"experience"},
-    {"id":"movie","name":"映画一本","price":2000,"category":"experience"},
-    {"id":"movie-snack","name":"映画とドリンク","price":2800,"category":"experience"},
-    {"id":"karaoke","name":"カラオケ一回","price":1800,"category":"experience"},
-    {"id":"cafe-time","name":"カフェで過ごす時間","price":1000,"category":"experience"},
-    {"id":"museum","name":"美術館・博物館","price":1500,"category":"experience"},
-    {"id":"day-trip","name":"近場の日帰り小旅行","price":8000,"category":"experience"},
-    {"id":"concert","name":"ライブ・イベント","price":12000,"category":"experience"},
-    {"id":"travel","name":"小旅行の交通費","price":30000,"category":"experience"},
-    {"id":"game-indie","name":"インディーゲーム一本","price":1500,"category":"hobby"},
-    {"id":"game-package","name":"ゲームソフト一本","price":7000,"category":"hobby"},
-    {"id":"game-dlc","name":"ゲームの追加コンテンツ","price":2500,"category":"hobby"},
-    {"id":"manga","name":"漫画三冊","price":1800,"category":"hobby"},
-    {"id":"novel","name":"文庫本二冊","price":1600,"category":"hobby"},
-    {"id":"board-game","name":"ボードゲーム一つ","price":4000,"category":"hobby"},
-    {"id":"streaming-month","name":"動画サービス約1か月","price":1000,"category":"service"},
-    {"id":"music-month","name":"音楽サービス約1か月","price":1000,"category":"service"},
-    {"id":"cloud-month","name":"クラウドサービス約1か月","price":1500,"category":"service"},
-    {"id":"app-book","name":"電子書籍一冊","price":800,"category":"hobby"},
-    {"id":"earphones","name":"有線イヤホン","price":3000,"category":"item"},
-    {"id":"wireless-earbuds","name":"ワイヤレスイヤホン","price":20000,"category":"item"},
-    {"id":"phone-case","name":"スマホケース","price":2500,"category":"item"},
-    {"id":"charging-cable","name":"充電ケーブル","price":1500,"category":"item"},
-    {"id":"water-bottle","name":"水筒・ボトル","price":2500,"category":"item"},
-    {"id":"umbrella","name":"折りたたみ傘","price":2000,"category":"item"},
-    {"id":"t-shirt","name":"Tシャツ","price":3000,"category":"fashion"},
-    {"id":"shirt","name":"シャツ","price":5000,"category":"fashion"},
-    {"id":"pants","name":"パンツ","price":7000,"category":"fashion"},
-    {"id":"shoes","name":"スニーカー","price":10000,"category":"fashion"},
-    {"id":"bag","name":"普段使いのバッグ","price":8000,"category":"fashion"},
-    {"id":"jacket","name":"軽いアウター","price":15000,"category":"fashion"},
-    {"id":"toiletries","name":"日用品の買い足し","price":1000,"category":"daily"},
-    {"id":"detergent","name":"洗剤","price":500,"category":"daily"},
-    {"id":"toilet-paper","name":"トイレットペーパー","price":600,"category":"daily"},
-    {"id":"shampoo","name":"シャンプー","price":1000,"category":"daily"},
-    {"id":"skincare","name":"スキンケア用品","price":3000,"category":"daily"},
-    {"id":"drugstore","name":"ドラッグストアの買い物","price":2000,"category":"daily"},
-    {"id":"small-gift","name":"ちょっとした贈り物","price":3000,"category":"gift"},
-    {"id":"birthday-gift","name":"誕生日プレゼント","price":5000,"category":"gift"},
-    {"id":"desk-lamp","name":"デスクライト","price":4000,"category":"item"},
-    {"id":"keyboard","name":"キーボード","price":8000,"category":"item"},
-    {"id":"mouse","name":"マウス","price":5000,"category":"item"},
-    {"id":"monitor","name":"モニター","price":25000,"category":"item"},
-    {"id":"tablet","name":"タブレット","price":50000,"category":"item"},
-    {"id":"pc","name":"新しいPC","price":150000,"category":"item"},
-    {"id":"study-book","name":"参考書二冊","price":4000,"category":"learning"},
-    {"id":"online-course","name":"オンライン講座","price":10000,"category":"learning"},
-    {"id":"language-app","name":"語学アプリ約半年","price":6000,"category":"learning"},
-    {"id":"notebook-set","name":"ノート・文具一式","price":1500,"category":"learning"},
-    {"id":"gym-month","name":"ジム約1か月","price":8000,"category":"health"},
-    {"id":"yoga-class","name":"ヨガ・運動レッスン","price":3000,"category":"health"},
-    {"id":"health-check","name":"健康診断の追加検査","price":5000,"category":"health"}
+    {
+      "id": "coffee-can",
+      "name": "缶コーヒー",
+      "price": 130,
+      "category": "food",
+      "unit": "本"
+    },
+    {
+      "id": "rice-ball",
+      "name": "おにぎり",
+      "price": 150,
+      "category": "food",
+      "unit": "個"
+    },
+    {
+      "id": "ice-cream",
+      "name": "コンビニアイス",
+      "price": 180,
+      "category": "food",
+      "unit": "個"
+    },
+    {
+      "id": "snack",
+      "name": "お菓子一袋",
+      "price": 250,
+      "category": "food",
+      "unit": "袋"
+    },
+    {
+      "id": "cafe-drink",
+      "name": "カフェのドリンク",
+      "price": 450,
+      "category": "food",
+      "unit": "杯"
+    },
+    {
+      "id": "lunch",
+      "name": "外食ランチ",
+      "price": 800,
+      "category": "food",
+      "unit": "回"
+    },
+    {
+      "id": "dessert",
+      "name": "少し良いスイーツ",
+      "price": 1200,
+      "category": "food",
+      "unit": "個"
+    },
+    {
+      "id": "ramen",
+      "name": "ラーメン一杯",
+      "price": 1000,
+      "category": "food",
+      "unit": "杯"
+    },
+    {
+      "id": "family-restaurant",
+      "name": "ファミレスの食事",
+      "price": 1500,
+      "category": "food",
+      "unit": "回"
+    },
+    {
+      "id": "yakiniku",
+      "name": "焼肉一回",
+      "price": 4000,
+      "category": "experience",
+      "unit": "回"
+    },
+    {
+      "id": "movie",
+      "name": "映画一本",
+      "price": 2000,
+      "category": "experience",
+      "unit": "本"
+    },
+    {
+      "id": "movie-snack",
+      "name": "映画とドリンク",
+      "price": 2800,
+      "category": "experience",
+      "unit": "回"
+    },
+    {
+      "id": "karaoke",
+      "name": "カラオケ一回",
+      "price": 1800,
+      "category": "experience",
+      "unit": "回"
+    },
+    {
+      "id": "cafe-time",
+      "name": "カフェで過ごす時間",
+      "price": 1000,
+      "category": "experience",
+      "unit": "回"
+    },
+    {
+      "id": "museum",
+      "name": "美術館・博物館",
+      "price": 1500,
+      "category": "experience",
+      "unit": "回"
+    },
+    {
+      "id": "day-trip",
+      "name": "近場の日帰り小旅行",
+      "price": 8000,
+      "category": "experience",
+      "unit": "回"
+    },
+    {
+      "id": "concert",
+      "name": "ライブ・イベント",
+      "price": 12000,
+      "category": "experience",
+      "unit": "回"
+    },
+    {
+      "id": "travel",
+      "name": "小旅行の交通費",
+      "price": 30000,
+      "category": "experience",
+      "unit": "回"
+    },
+    {
+      "id": "game-indie",
+      "name": "インディーゲーム一本",
+      "price": 1500,
+      "category": "hobby",
+      "unit": "本"
+    },
+    {
+      "id": "game-package",
+      "name": "ゲームソフト一本",
+      "price": 7000,
+      "category": "hobby",
+      "unit": "本"
+    },
+    {
+      "id": "game-dlc",
+      "name": "ゲームの追加コンテンツ",
+      "price": 2500,
+      "category": "hobby",
+      "unit": "個"
+    },
+    {
+      "id": "manga",
+      "name": "漫画三冊",
+      "price": 1800,
+      "category": "hobby",
+      "unit": "セット"
+    },
+    {
+      "id": "novel",
+      "name": "文庫本二冊",
+      "price": 1600,
+      "category": "hobby",
+      "unit": "セット"
+    },
+    {
+      "id": "board-game",
+      "name": "ボードゲーム一つ",
+      "price": 4000,
+      "category": "hobby",
+      "unit": "個"
+    },
+    {
+      "id": "streaming-month",
+      "name": "動画サービス約1か月",
+      "price": 1000,
+      "category": "service",
+      "unit": "か月"
+    },
+    {
+      "id": "music-month",
+      "name": "音楽サービス約1か月",
+      "price": 1000,
+      "category": "service",
+      "unit": "か月"
+    },
+    {
+      "id": "cloud-month",
+      "name": "クラウドサービス約1か月",
+      "price": 1500,
+      "category": "service",
+      "unit": "か月"
+    },
+    {
+      "id": "app-book",
+      "name": "電子書籍一冊",
+      "price": 800,
+      "category": "hobby",
+      "unit": "冊"
+    },
+    {
+      "id": "earphones",
+      "name": "有線イヤホン",
+      "price": 3000,
+      "category": "item",
+      "unit": "個"
+    },
+    {
+      "id": "wireless-earbuds",
+      "name": "ワイヤレスイヤホン",
+      "price": 20000,
+      "category": "item",
+      "unit": "個"
+    },
+    {
+      "id": "phone-case",
+      "name": "スマホケース",
+      "price": 2500,
+      "category": "item",
+      "unit": "個"
+    },
+    {
+      "id": "charging-cable",
+      "name": "充電ケーブル",
+      "price": 1500,
+      "category": "item",
+      "unit": "本"
+    },
+    {
+      "id": "water-bottle",
+      "name": "水筒・ボトル",
+      "price": 2500,
+      "category": "item",
+      "unit": "個"
+    },
+    {
+      "id": "umbrella",
+      "name": "折りたたみ傘",
+      "price": 2000,
+      "category": "item",
+      "unit": "本"
+    },
+    {
+      "id": "t-shirt",
+      "name": "Tシャツ",
+      "price": 3000,
+      "category": "fashion",
+      "unit": "枚"
+    },
+    {
+      "id": "shirt",
+      "name": "シャツ",
+      "price": 5000,
+      "category": "fashion",
+      "unit": "枚"
+    },
+    {
+      "id": "pants",
+      "name": "パンツ",
+      "price": 7000,
+      "category": "fashion",
+      "unit": "枚"
+    },
+    {
+      "id": "shoes",
+      "name": "スニーカー",
+      "price": 10000,
+      "category": "fashion",
+      "unit": "足"
+    },
+    {
+      "id": "bag",
+      "name": "普段使いのバッグ",
+      "price": 8000,
+      "category": "fashion",
+      "unit": "個"
+    },
+    {
+      "id": "jacket",
+      "name": "軽いアウター",
+      "price": 15000,
+      "category": "fashion",
+      "unit": "着"
+    },
+    {
+      "id": "toiletries",
+      "name": "日用品の買い足し",
+      "price": 1000,
+      "category": "daily",
+      "unit": "回"
+    },
+    {
+      "id": "detergent",
+      "name": "洗剤",
+      "price": 500,
+      "category": "daily",
+      "unit": "個"
+    },
+    {
+      "id": "toilet-paper",
+      "name": "トイレットペーパー",
+      "price": 600,
+      "category": "daily",
+      "unit": "個"
+    },
+    {
+      "id": "shampoo",
+      "name": "シャンプー",
+      "price": 1000,
+      "category": "daily",
+      "unit": "本"
+    },
+    {
+      "id": "skincare",
+      "name": "スキンケア用品",
+      "price": 3000,
+      "category": "daily",
+      "unit": "セット"
+    },
+    {
+      "id": "drugstore",
+      "name": "ドラッグストアの買い物",
+      "price": 2000,
+      "category": "daily",
+      "unit": "回"
+    },
+    {
+      "id": "small-gift",
+      "name": "ちょっとした贈り物",
+      "price": 3000,
+      "category": "gift",
+      "unit": "個"
+    },
+    {
+      "id": "birthday-gift",
+      "name": "誕生日プレゼント",
+      "price": 5000,
+      "category": "gift",
+      "unit": "個"
+    },
+    {
+      "id": "desk-lamp",
+      "name": "デスクライト",
+      "price": 4000,
+      "category": "item",
+      "unit": "個"
+    },
+    {
+      "id": "keyboard",
+      "name": "キーボード",
+      "price": 8000,
+      "category": "item",
+      "unit": "個"
+    },
+    {
+      "id": "mouse",
+      "name": "マウス",
+      "price": 5000,
+      "category": "item",
+      "unit": "個"
+    },
+    {
+      "id": "monitor",
+      "name": "モニター",
+      "price": 25000,
+      "category": "item",
+      "unit": "台"
+    },
+    {
+      "id": "tablet",
+      "name": "タブレット",
+      "price": 50000,
+      "category": "item",
+      "unit": "台"
+    },
+    {
+      "id": "pc",
+      "name": "新しいPC",
+      "price": 150000,
+      "category": "item",
+      "unit": "台"
+    },
+    {
+      "id": "study-book",
+      "name": "参考書二冊",
+      "price": 4000,
+      "category": "learning",
+      "unit": "セット"
+    },
+    {
+      "id": "online-course",
+      "name": "オンライン講座",
+      "price": 10000,
+      "category": "learning",
+      "unit": "回"
+    },
+    {
+      "id": "language-app",
+      "name": "語学アプリ約半年",
+      "price": 6000,
+      "category": "learning",
+      "unit": "か月"
+    },
+    {
+      "id": "notebook-set",
+      "name": "ノート・文具一式",
+      "price": 1500,
+      "category": "learning",
+      "unit": "セット"
+    },
+    {
+      "id": "gym-month",
+      "name": "ジム約1か月",
+      "price": 8000,
+      "category": "health",
+      "unit": "か月"
+    },
+    {
+      "id": "yoga-class",
+      "name": "ヨガ・運動レッスン",
+      "price": 3000,
+      "category": "health",
+      "unit": "回"
+    },
+    {
+      "id": "health-check",
+      "name": "健康診断の追加検査",
+      "price": 5000,
+      "category": "health",
+      "unit": "回"
+    }
   ]
 }
