@@ -1,0 +1,32 @@
+@import 'tailwindcss';
+
+/*
+  アプリ全体の基本トーン。ミニマルを土台にし、達成感の表現だけ色を強くする。
+  - neutral 系: 文字・背景
+  - emerald 系: 守れた金額（ポジティブ）
+*/
+@theme {
+  --font-sans:
+    'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', system-ui,
+    sans-serif;
+}
+
+html {
+  /* iOS Safari で入力欄にフォーカスした際の自動ズームを防ぐ */
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-slate-100);
+  color: var(--color-slate-900);
+  font-family: var(--font-sans);
+  /* iOS のスクロールバウンス時に背景が白く抜けないようにする */
+  overscroll-behavior-y: none;
+}
+
+/* タップ時のハイライトを消して、ネイティブアプリに近い触り心地にする */
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}

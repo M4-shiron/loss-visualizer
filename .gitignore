@@ -1,0 +1,33 @@
+# Xcode
+.build/
+DerivedData/
+build/
+xcuserdata/
+*.xcuserstate
+
+# Swift Package Manager
+.swiftpm/
+
+# Node / Web
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+
+# macOS
+.DS_Store
+
+# Secrets and local configuration
+*.p12
+*.mobileprovision
+Secrets.xcconfig
+Local.xcconfig
+
+# Vite / Vitest
+.vite/
+coverage/
+*.local
+
+# Vercel
+.vercel
