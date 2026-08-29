@@ -14,6 +14,10 @@ export function getPromptsForCategory(categoryId: CategoryId): string[] {
   return PROMPT_CATEGORIES.find((c) => c.id === categoryId)?.prompts ?? []
 }
 
+export function getCategoryName(categoryId: CategoryId): string {
+  return PROMPT_CATEGORIES.find((c) => c.id === categoryId)?.name ?? categoryId
+}
+
 /** カテゴリに対応する問いかけをランダムに1件返す（§4）。 */
 export function pickRandomPrompt(categoryId: CategoryId): string | undefined {
   const prompts = getPromptsForCategory(categoryId)

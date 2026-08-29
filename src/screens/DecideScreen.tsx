@@ -7,23 +7,15 @@ import { buildComparisonCards } from '../domain/comparison'
 import { totalConfirmedSavings } from '../domain/decisions'
 import { formatYen } from '../domain/format'
 import { findPriorityGoal, goalProgressPercent } from '../domain/goals'
+import { PURCHASE_REASON_OPTIONS, purchaseReasonLabel } from '../domain/purchaseReason'
+import { MAX_AMOUNT_DIGITS } from '../domain/validation'
 import { pickRandomPrompt, PROMPT_CATEGORIES } from '../data/prompts'
 import type { RecordDecisionResult } from '../store/context'
 import { useAppState } from '../store/useAppState'
 import type { CategoryId, Goal, Outcome, PurchaseReason } from '../types/domain'
 import { ROUTES } from '../routes'
 
-const MAX_AMOUNT_DIGITS = 7
-
 type Step = 'input' | 'judge' | 'purchaseReason' | 'result'
-
-const PURCHASE_REASON_OPTIONS: { id: PurchaseReason; label: string }[] = [
-  { id: 'necessary', label: '必要だった' },
-  { id: 'reward', label: 'ご褒美' },
-  { id: 'planned', label: '前から予定していた' },
-  { id: 'impulse', label: 'その場で欲しくなった' },
-  { id: 'other', label: 'その他' },
-]
 
 /**
  * 購入判断フロー。入力→問いかけ→損失可視化→判断→結果を
@@ -382,7 +374,7 @@ function ResultStep({
   onGoHome,
 }: ResultStepProps) {
   const priorityGoal = useMemo(() => findPriorityGoal(goals), [goals])
-  const reasonLabel = PURCHASE_REASON_OPTIONS.find((r) => r.id === purchaseReason)?.label
+  const reasonLabel = purchaseReasonLabel(purchaseReason)
 
   return (
     <div className="space-y-5">

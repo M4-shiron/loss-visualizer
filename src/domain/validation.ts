@@ -3,6 +3,8 @@
 export const NAME_MAX_LENGTH = 30
 export const MIN_AMOUNT = 1
 export const MAX_AMOUNT = 9_999_999
+/** 金額入力欄で受け付ける最大桁数（MAX_AMOUNTの桁数と一致させる）。 */
+export const MAX_AMOUNT_DIGITS = 7
 
 export function isValidName(name: string): boolean {
   const trimmed = name.trim()

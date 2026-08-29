@@ -1,8 +1,12 @@
 import { useId, useState } from 'react'
-import { isValidAmount, isValidName, MAX_AMOUNT, NAME_MAX_LENGTH } from '../domain/validation'
+import {
+  isValidAmount,
+  isValidName,
+  MAX_AMOUNT,
+  MAX_AMOUNT_DIGITS,
+  NAME_MAX_LENGTH,
+} from '../domain/validation'
 import { formatYen } from '../domain/format'
-
-const MAX_AMOUNT_DIGITS = 7
 
 type Props = {
   nameLabel: string

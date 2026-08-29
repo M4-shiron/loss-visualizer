@@ -1,12 +1,17 @@
 import { describe, expect, it } from 'vitest'
+import { totalConfirmedSavings } from '../../domain/decisions'
 import { createEmptyData } from '../../storage/schema'
-import type { Goal, ValueItem } from '../../types/domain'
+import type { Decision, Goal, ValueItem } from '../../types/domain'
 import {
   addGoal,
   addValueItem,
+  archiveExpiredPendingDecisions,
+  removeDecision,
   removeGoal,
   removeValueItem,
+  resolvePending,
   setPriorityGoal,
+  updateDecision,
   updateGoal,
   updateValueItem,
 } from '../mutations'
@@ -27,6 +32,17 @@ function makeGoal(overrides: Partial<Goal> = {}): Goal {
     title: '旅行資金',
     targetAmount: 50000,
     isPriority: false,
+    createdAt: '2026-08-01T00:00:00.000Z',
+    ...overrides,
+  }
+}
+
+function makeDecision(overrides: Partial<Decision> = {}): Decision {
+  return {
+    id: 'd1',
+    amount: 500,
+    categoryId: 'convenience',
+    outcome: 'pending',
     createdAt: '2026-08-01T00:00:00.000Z',
     ...overrides,
   }
@@ -99,6 +115,182 @@ describe('節約目標の変更', () => {
     const data = addGoal(createEmptyData(), makeGoal({ id: 'g1' }))
     const next = removeGoal(data, 'g1')
     expect(next.goals).toEqual([])
+  })
+})
+
+describe('保留の確定（resolvePending）', () => {
+  const now = new Date('2026-08-03T00:00:00.000Z')
+
+  it('「やめる」で確定すると、outcomeとresolvedAtが更新される', () => {
+    const data = { ...createEmptyData(), decisions: [makeDecision({ id: 'd1', amount: 800 })] }
+    const next = resolvePending(data, { id: 'd1', outcome: 'skipped', now })
+    expect(next.decisions[0].outcome).toBe('skipped')
+    expect(next.decisions[0].resolvedAt).toBe(now.toISOString())
+  })
+
+  it('「買う」で確定すると、理由も保存される', () => {
+    const data = { ...createEmptyData(), decisions: [makeDecision({ id: 'd1' })] }
+    const next = resolvePending(data, { id: 'd1', outcome: 'purchased', purchaseReason: 'reward', now })
+    expect(next.decisions[0].outcome).toBe('purchased')
+    expect(next.decisions[0].purchaseReason).toBe('reward')
+  })
+
+  it('確定によって新たに実績の条件を満たせば、実績が追加される', () => {
+    const data = { ...createEmptyData(), decisions: [makeDecision({ id: 'd1', amount: 1000 })] }
+    const next = resolvePending(data, { id: 'd1', outcome: 'skipped', now })
+    expect(next.achievements.map((a) => a.id)).toContain('amount-1000')
+  })
+})
+
+describe('履歴の編集（updateDecision）', () => {
+  const now = new Date('2026-08-03T00:00:00.000Z')
+
+  it('金額・カテゴリ・商品名・判断結果を変更できる', () => {
+    const data = {
+      ...createEmptyData(),
+      decisions: [makeDecision({ id: 'd1', amount: 500, outcome: 'skipped' })],
+    }
+    const next = updateDecision(data, {
+      id: 'd1',
+      update: { amount: 800, categoryId: 'hobby', itemName: '漫画', outcome: 'skipped', purchaseReason: undefined },
+      now,
+    })
+    expect(next.decisions[0]).toMatchObject({
+      amount: 800,
+      categoryId: 'hobby',
+      itemName: '漫画',
+      outcome: 'skipped',
+    })
+  })
+
+  it('日付（createdAt）は変更されない', () => {
+    const data = {
+      ...createEmptyData(),
+      decisions: [makeDecision({ id: 'd1', createdAt: '2026-08-01T00:00:00.000Z' })],
+    }
+    const next = updateDecision(data, {
+      id: 'd1',
+      update: { amount: 800, categoryId: 'hobby', itemName: undefined, outcome: 'skipped', purchaseReason: undefined },
+      now,
+    })
+    expect(next.decisions[0].createdAt).toBe('2026-08-01T00:00:00.000Z')
+  })
+
+  it('編集で累計が節目を下回ると、実績が解除状態から外れる', () => {
+    const data = {
+      ...createEmptyData(),
+      decisions: [makeDecision({ id: 'd1', amount: 1000, outcome: 'skipped' })],
+      achievements: [
+        { id: 'amount-1000', kind: { type: 'amount' as const, threshold: 1000 }, unlockedAt: '2026-08-01T00:00:00.000Z' },
+      ],
+    }
+    const next = updateDecision(data, {
+      id: 'd1',
+      update: { amount: 300, categoryId: 'convenience', itemName: undefined, outcome: 'skipped', purchaseReason: undefined },
+      now,
+    })
+    expect(next.achievements).toEqual([])
+  })
+
+  it('アーカイブ済みの保留を「やめた」に変更すると、archivedAtが解除され確定節約額に含まれる', () => {
+    const data = {
+      ...createEmptyData(),
+      decisions: [
+        makeDecision({
+          id: 'd1',
+          amount: 500,
+          outcome: 'pending',
+          archivedAt: '2026-08-02T00:00:00.000Z',
+        }),
+      ],
+    }
+    const next = updateDecision(data, {
+      id: 'd1',
+      update: {
+        amount: 500,
+        categoryId: 'convenience',
+        itemName: undefined,
+        outcome: 'skipped',
+        purchaseReason: undefined,
+      },
+      now,
+    })
+    expect(next.decisions[0].archivedAt).toBeUndefined()
+    expect(totalConfirmedSavings(next.decisions)).toBe(500)
+  })
+
+  it('判断結果を保留のままにした場合、既存のarchivedAtは変更しない', () => {
+    const data = {
+      ...createEmptyData(),
+      decisions: [
+        makeDecision({
+          id: 'd1',
+          amount: 500,
+          outcome: 'pending',
+          archivedAt: '2026-08-02T00:00:00.000Z',
+        }),
+      ],
+    }
+    const next = updateDecision(data, {
+      id: 'd1',
+      update: {
+        amount: 700,
+        categoryId: 'convenience',
+        itemName: undefined,
+        outcome: 'pending',
+        purchaseReason: undefined,
+      },
+      now,
+    })
+    expect(next.decisions[0].archivedAt).toBe('2026-08-02T00:00:00.000Z')
+  })
+})
+
+describe('履歴の削除（removeDecision）', () => {
+  const now = new Date('2026-08-03T00:00:00.000Z')
+
+  it('削除すると一覧から消える', () => {
+    const data = { ...createEmptyData(), decisions: [makeDecision({ id: 'd1' })] }
+    const next = removeDecision(data, { id: 'd1', now })
+    expect(next.decisions).toHaveLength(0)
+  })
+
+  it('削除で累計が節目を下回ると、実績が解除状態から外れる', () => {
+    const data = {
+      ...createEmptyData(),
+      decisions: [
+        makeDecision({ id: 'd1', amount: 1000, outcome: 'skipped' }),
+        makeDecision({ id: 'd2', amount: 500, outcome: 'skipped' }),
+      ],
+      achievements: [
+        { id: 'amount-1000', kind: { type: 'amount' as const, threshold: 1000 }, unlockedAt: '2026-08-01T00:00:00.000Z' },
+      ],
+    }
+    const next = removeDecision(data, { id: 'd1', now })
+    expect(next.achievements).toEqual([])
+    expect(next.decisions).toHaveLength(1)
+  })
+})
+
+describe('保留の自動アーカイブ（archiveExpiredPendingDecisions）', () => {
+  it('48時間経過した未対応の保留をアーカイブする', () => {
+    const now = new Date('2026-08-03T00:00:00.000Z')
+    const data = {
+      ...createEmptyData(),
+      decisions: [makeDecision({ id: 'd1', createdAt: '2026-08-01T00:00:00.000Z' })],
+    }
+    const next = archiveExpiredPendingDecisions(data, now)
+    expect(next.decisions[0].archivedAt).toBe(now.toISOString())
+  })
+
+  it('48時間未満の保留はアーカイブしない', () => {
+    const now = new Date('2026-08-01T12:00:00.000Z')
+    const data = {
+      ...createEmptyData(),
+      decisions: [makeDecision({ id: 'd1', createdAt: '2026-08-01T00:00:00.000Z' })],
+    }
+    const next = archiveExpiredPendingDecisions(data, now)
+    expect(next.decisions[0].archivedAt).toBeUndefined()
   })
 })
 

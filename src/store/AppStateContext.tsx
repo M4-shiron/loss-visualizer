@@ -1,6 +1,7 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { detectNewAchievements } from '../domain/achievementUnlock'
 import { generateId } from '../domain/id'
+import { shouldArchive } from '../domain/pending'
 import { LocalStorageRepository } from '../storage/localStorageRepository'
 import type { StoredData } from '../storage/schema'
 import type { Achievement, Decision, Goal, ValueItem } from '../types/domain'
@@ -10,6 +11,8 @@ import {
   type GoalInput,
   type RecordDecisionInput,
   type RecordDecisionResult,
+  type ResolvePendingInput,
+  type UpdateDecisionInput,
   type ValueItemInput,
 } from './context'
 import * as mutations from './mutations'
@@ -25,7 +28,17 @@ const repository = new LocalStorageRepository()
  * （第3ループでの指摘を踏まえた設計）。
  */
 export function AppStateProvider({ children }: { children: ReactNode }) {
-  const [initial] = useState(() => repository.load())
+  const [initial] = useState(() => {
+    const loaded = repository.load()
+    // 起動時に1回だけ、48時間経過した未対応の保留をアーカイブする（常時監視はしない）。
+    const now = new Date()
+    if (loaded.data.decisions.some((d) => shouldArchive(d, now))) {
+      const archivedData = mutations.archiveExpiredPendingDecisions(loaded.data, now)
+      repository.save(archivedData)
+      return { ...loaded, data: archivedData }
+    }
+    return loaded
+  })
   const [data, setData] = useState<StoredData>(initial.data)
 
   const value = useMemo<AppStateContextValue>(() => {
@@ -121,10 +134,51 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       applyAndSave((prev) => mutations.completeOnboarding(prev))
     }
 
+    const resolvePending = (id: string, input: ResolvePendingInput): void => {
+      const now = new Date()
+      applyAndSave((prev) =>
+        mutations.resolvePending(prev, {
+          id,
+          outcome: input.outcome,
+          purchaseReason: input.purchaseReason,
+          now,
+        }),
+      )
+    }
+
+    const updateDecision = (id: string, input: UpdateDecisionInput): void => {
+      const now = new Date()
+      applyAndSave((prev) =>
+        mutations.updateDecision(prev, {
+          id,
+          update: {
+            amount: input.amount,
+            categoryId: input.categoryId,
+            itemName: input.itemName,
+            outcome: input.outcome,
+            purchaseReason: input.purchaseReason,
+          },
+          now,
+        }),
+      )
+    }
+
+    const removeDecision = (id: string): void => {
+      const now = new Date()
+      applyAndSave((prev) => mutations.removeDecision(prev, { id, now }))
+    }
+
+    const archiveExpiredPending = (): void => {
+      applyAndSave((prev) => mutations.archiveExpiredPendingDecisions(prev, new Date()))
+    }
+
     return {
       data,
       persistenceUnavailable: initial.persistenceUnavailable,
       recordDecision,
+      resolvePending,
+      updateDecision,
+      removeDecision,
       addValueItem,
       updateValueItem,
       removeValueItem,
@@ -133,6 +187,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       removeGoal,
       setPriorityGoal,
       completeOnboarding,
+      archiveExpiredPending,
     }
   }, [data, initial.persistenceUnavailable])
 

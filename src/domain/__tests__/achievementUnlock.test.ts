@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Achievement, Decision } from '../../types/domain'
-import { detectNewAchievements } from '../achievementUnlock'
+import { detectNewAchievements, recalculateAchievements } from '../achievementUnlock'
 
 function makeSkipped(id: string, amount: number): Decision {
   return {
@@ -49,5 +49,47 @@ describe('実績の解除判定', () => {
     const result = detectNewAchievements(decisions, [], now)
     const ids = result.map((a) => a.id).sort()
     expect(ids).toEqual(['amount-1000', 'amount-5000'])
+  })
+})
+
+describe('実績の再計算（履歴の編集・削除後）', () => {
+  const now = new Date('2026-08-29T00:00:00.000Z')
+
+  it('累計が節目を下回ると、実績は解除状態から外れる', () => {
+    const decisions = [makeSkipped('d1', 500)] // 元は1000円だったが編集で500円に減った想定
+    const existing: Achievement[] = [
+      { id: 'amount-1000', kind: { type: 'amount', threshold: 1000 }, unlockedAt: '2026-08-20T00:00:00.000Z' },
+    ]
+    const result = recalculateAchievements(decisions, existing, now)
+    expect(result).toEqual([])
+  })
+
+  it('条件を満たし続けている実績は、unlockedAtを変えずそのまま残す', () => {
+    const decisions = [makeSkipped('d1', 1000), makeSkipped('d2', 200)]
+    const originalUnlockedAt = '2026-08-20T00:00:00.000Z'
+    const existing: Achievement[] = [
+      { id: 'amount-1000', kind: { type: 'amount', threshold: 1000 }, unlockedAt: originalUnlockedAt },
+    ]
+    const result = recalculateAchievements(decisions, existing, now)
+    expect(result).toEqual([
+      { id: 'amount-1000', kind: { type: 'amount', threshold: 1000 }, unlockedAt: originalUnlockedAt },
+    ])
+  })
+
+  it('解除→未解除→再達成の場合、unlockedAtは新しい達成時点になる', () => {
+    // 一度1000円を達成して解除されたが、削除で500円に減り、その後また1000円に戻った想定
+    const decisions = [makeSkipped('d1', 1000)]
+    const existing: Achievement[] = [] // 一度解除から外れた状態（削除済み）
+    const result = recalculateAchievements(decisions, existing, now)
+    expect(result).toEqual([
+      { id: 'amount-1000', kind: { type: 'amount', threshold: 1000 }, unlockedAt: now.toISOString() },
+    ])
+  })
+
+  it('判断が0件になっても壊れない', () => {
+    const existing: Achievement[] = [
+      { id: 'amount-1000', kind: { type: 'amount', threshold: 1000 }, unlockedAt: '2026-08-20T00:00:00.000Z' },
+    ]
+    expect(recalculateAchievements([], existing, now)).toEqual([])
   })
 })
