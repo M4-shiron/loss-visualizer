@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppLayout } from './components/AppLayout'
+import { RequireOnboarding } from './components/RequireOnboarding'
 import { DecideScreen } from './screens/DecideScreen'
 import { HistoryScreen } from './screens/HistoryScreen'
 import { HomeScreen } from './screens/HomeScreen'
@@ -13,16 +14,20 @@ export function App() {
   return (
     <AppStateProvider>
       <Routes>
-        {/* ナビゲーションを表示する通常画面 */}
-        <Route element={<AppLayout />}>
-          <Route path={ROUTES.home} element={<HomeScreen />} />
-          <Route path={ROUTES.history} element={<HistoryScreen />} />
-          <Route path={ROUTES.pending} element={<PendingScreen />} />
-          <Route path={ROUTES.settings} element={<SettingsScreen />} />
+        {/* 初回オンボーディングが未完了なら、以下すべてから誘導する */}
+        <Route element={<RequireOnboarding />}>
+          {/* ナビゲーションを表示する通常画面 */}
+          <Route element={<AppLayout />}>
+            <Route path={ROUTES.home} element={<HomeScreen />} />
+            <Route path={ROUTES.history} element={<HistoryScreen />} />
+            <Route path={ROUTES.pending} element={<PendingScreen />} />
+            <Route path={ROUTES.settings} element={<SettingsScreen />} />
+          </Route>
+
+          {/* 操作に集中させる全画面表示 */}
+          <Route path={ROUTES.decide} element={<DecideScreen />} />
         </Route>
 
-        {/* 操作に集中させる全画面表示 */}
-        <Route path={ROUTES.decide} element={<DecideScreen />} />
         <Route path={ROUTES.onboarding} element={<OnboardingScreen />} />
 
         <Route path="*" element={<Navigate to={ROUTES.home} replace />} />

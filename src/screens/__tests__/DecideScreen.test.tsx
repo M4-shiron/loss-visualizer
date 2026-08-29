@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { App } from '../../App'
 import { pendingAmount, totalConfirmedSavings } from '../../domain/decisions'
 import { STORAGE_KEY, type StoredData } from '../../storage/schema'
+import { seedCompletedOnboarding } from '../../test/seed'
 
 function renderDecideScreen() {
   return render(
@@ -29,6 +30,7 @@ function fillInputAndProceed(amountDigits: string, categoryName = 'コンビニ'
 describe('購入判断フロー', () => {
   beforeEach(() => {
     window.localStorage.clear()
+    seedCompletedOnboarding()
   })
 
   afterEach(() => {
@@ -121,14 +123,14 @@ describe('購入判断フロー', () => {
     fireEvent.click(screen.getByRole('button', { name: '前の画面へ戻る' }))
 
     expect(screen.getByText('何に迷っていますか？')).toBeInTheDocument()
-    expect(window.localStorage.getItem(STORAGE_KEY)).toBeNull()
+    expect(readStoredData().decisions).toHaveLength(0)
   })
 
   it('入力ステップでの戻るは何も記録せず前の画面へ遷移する', () => {
     renderDecideScreen()
     fireEvent.click(screen.getByRole('button', { name: '前の画面へ戻る' }))
 
-    expect(window.localStorage.getItem(STORAGE_KEY)).toBeNull()
+    expect(readStoredData().decisions).toHaveLength(0)
   })
 
   it('金額が未入力のままでは「次へ」に進めない', () => {

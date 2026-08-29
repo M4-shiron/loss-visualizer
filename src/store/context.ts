@@ -40,6 +40,9 @@ export type AppStateContextValue = {
   removeGoal: (id: string) => void
   /** 優先目標を切り替える。nullで優先目標なしにする。 */
   setPriorityGoal: (id: string | null) => void
+
+  /** 初回オンボーディングを完了とする。以後、各画面への誘導が止まる。 */
+  completeOnboarding: () => void
 }
 
 export const AppStateContext = createContext<AppStateContextValue | undefined>(undefined)

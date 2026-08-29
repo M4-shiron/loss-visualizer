@@ -1,7 +1,8 @@
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { App } from './App'
+import { seedCompletedOnboarding } from './test/seed'
 
 function renderApp(initialPath = '/') {
   return render(
@@ -12,6 +13,11 @@ function renderApp(initialPath = '/') {
 }
 
 describe('画面遷移', () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+    seedCompletedOnboarding()
+  })
+
   it('ホームに購入判断への大きな導線が表示される', () => {
     renderApp()
     expect(
@@ -45,6 +51,30 @@ describe('画面遷移', () => {
 
   it('定義されていないパスはホームへ戻す', () => {
     renderApp('/unknown-path')
+    expect(
+      screen.getByRole('link', { name: '買うか迷っている' }),
+    ).toBeInTheDocument()
+  })
+})
+
+describe('オンボーディング誘導', () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+  })
+
+  it.each([['/'], ['/decide'], ['/history'], ['/pending'], ['/settings']])(
+    'オンボーディング未完了で%sを開くと、はじめる前に画面へ誘導される',
+    (path) => {
+      renderApp(path)
+      expect(
+        screen.getByRole('heading', { name: 'はじめる前に' }),
+      ).toBeInTheDocument()
+    },
+  )
+
+  it('オンボーディング完了後は通常どおりホームが表示される', () => {
+    seedCompletedOnboarding()
+    renderApp('/')
     expect(
       screen.getByRole('link', { name: '買うか迷っている' }),
     ).toBeInTheDocument()

@@ -10,6 +10,7 @@ type Props = {
   initialName?: string
   initialAmount?: number
   submitLabel: string
+  cancelLabel?: string
   onSubmit: (name: string, amount: number) => void
   onCancel: () => void
 }
@@ -21,6 +22,7 @@ export function NameAmountForm({
   initialName = '',
   initialAmount,
   submitLabel,
+  cancelLabel = 'キャンセル',
   onSubmit,
   onCancel,
 }: Props) {
@@ -86,7 +88,7 @@ export function NameAmountForm({
           onClick={onCancel}
           className="min-h-11 flex-1 rounded-xl border border-slate-300 bg-white text-sm font-bold text-slate-600"
         >
-          キャンセル
+          {cancelLabel}
         </button>
         <button
           type="button"

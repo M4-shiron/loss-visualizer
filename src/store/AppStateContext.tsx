@@ -117,6 +117,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       applyAndSave((prev) => mutations.setPriorityGoal(prev, id))
     }
 
+    const completeOnboarding = (): void => {
+      applyAndSave((prev) => mutations.completeOnboarding(prev))
+    }
+
     return {
       data,
       persistenceUnavailable: initial.persistenceUnavailable,
@@ -128,6 +132,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       updateGoal,
       removeGoal,
       setPriorityGoal,
+      completeOnboarding,
     }
   }, [data, initial.persistenceUnavailable])
 

@@ -1,44 +1,82 @@
 import { Link } from 'react-router-dom'
-import { Placeholder } from '../components/Placeholder'
+import { StatTile } from '../components/StatTile'
+import {
+  monthlyConfirmedSavings,
+  monthlySkipCount,
+  pendingAmount,
+  totalConfirmedSavings,
+  totalSkipCount,
+} from '../domain/decisions'
+import { formatYen } from '../domain/format'
+import { findPriorityGoal, goalProgressPercent } from '../domain/goals'
 import { ROUTES } from '../routes'
+import { useAppState } from '../store/useAppState'
 
 /**
- * ホーム。最優先要素は「すぐ購入判断を開始できる大きな導線」。
- * 集計値の表示は第4ループで実装する。
+ * ホーム。最優先要素は「今月の確定節約額」と「すぐ購入判断を開始できる導線」で、
+ * これらはファーストビューに収める。その他の集計・目標情報は縦スクロールを許容する（§12）。
  */
 export function HomeScreen() {
+  const { data } = useAppState()
+  const now = new Date()
+
+  const monthlySavings = monthlyConfirmedSavings(data.decisions, now)
+  const totalSavings = totalConfirmedSavings(data.decisions)
+  const pending = pendingAmount(data.decisions)
+  const monthlyCount = monthlySkipCount(data.decisions, now)
+  const totalCount = totalSkipCount(data.decisions)
+  const priorityGoal = findPriorityGoal(data.goals)
+  const hasAnyDecision = data.decisions.length > 0
+
   return (
     <>
-      <header className="mb-5">
+      <header className="mb-4">
         <p className="text-sm text-slate-500">Loss Visualizer</p>
         <h1 className="text-xl font-bold tracking-tight text-slate-900">
           買う前に、ひと呼吸。
         </h1>
       </header>
 
+      {/* ファーストビュー: 今月の確定節約額 + 購入判断への導線 */}
+      <section className="rounded-2xl bg-emerald-600 px-5 py-5 text-white shadow-lg shadow-emerald-600/20">
+        <p className="text-xs font-medium text-emerald-50">今月、守れた金額</p>
+        <p className="mt-1 text-4xl font-extrabold">{formatYen(monthlySavings)}</p>
+        {!hasAnyDecision ? (
+          <p className="mt-2 text-xs text-emerald-50">
+            まだ記録がありません。最初の判断をしてみましょう。
+          </p>
+        ) : null}
+      </section>
+
       <Link
         to={ROUTES.decide}
-        className="flex min-h-28 w-full items-center justify-center rounded-2xl bg-emerald-600 px-6 text-lg font-bold text-white shadow-lg shadow-emerald-600/20 transition-transform active:scale-[0.98]"
+        className="mt-3 flex min-h-16 w-full items-center justify-center rounded-2xl bg-slate-900 px-6 text-lg font-bold text-white shadow-md transition-transform active:scale-[0.98]"
       >
         買うか迷っている
       </Link>
 
       <div className="mt-6 space-y-4">
-        <Placeholder
-          loop={4}
-          items={[
-            '今月の確定節約額（最も強く表示する）',
-            '総累計の確定節約額',
-            '保留中の回避額',
-            '優先目標への進捗',
-            '今月・累計の思いとどまった回数',
-          ]}
-        />
-        <p className="text-center text-xs text-slate-400">
-          <Link to={ROUTES.onboarding} className="underline">
-            初回設定の画面を確認する
-          </Link>
-        </p>
+        {priorityGoal ? (
+          <section className="rounded-2xl bg-white p-4 shadow-sm">
+            <p className="text-sm font-bold text-slate-900">{priorityGoal.title}</p>
+            <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-200">
+              <div
+                className="h-full rounded-full bg-sky-600"
+                style={{ width: `${goalProgressPercent(priorityGoal, totalSavings)}%` }}
+              />
+            </div>
+            <p className="mt-1.5 text-xs text-slate-500">{`達成率 ${
+              Math.round(goalProgressPercent(priorityGoal, totalSavings) * 10) / 10
+            }%（目標 ${formatYen(priorityGoal.targetAmount)}）`}</p>
+          </section>
+        ) : null}
+
+        <div className="grid grid-cols-2 gap-3">
+          <StatTile label="総累計の節約額" value={formatYen(totalSavings)} />
+          <StatTile label="保留中の回避額" value={formatYen(pending)} />
+          <StatTile label="今月、思いとどまった回数" value={`${monthlyCount}回`} />
+          <StatTile label="累計、思いとどまった回数" value={`${totalCount}回`} />
+        </div>
       </div>
     </>
   )

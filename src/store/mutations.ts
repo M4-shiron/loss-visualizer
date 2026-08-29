@@ -60,3 +60,7 @@ export function setPriorityGoal(prev: StoredData, id: string | null): StoredData
     goals: prev.goals.map((g) => ({ ...g, isPriority: g.id === id })),
   }
 }
+
+export function completeOnboarding(prev: StoredData): StoredData {
+  return { ...prev, settings: { ...prev.settings, onboardingCompleted: true } }
+}

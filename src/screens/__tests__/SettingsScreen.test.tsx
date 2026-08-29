@@ -3,6 +3,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { App } from '../../App'
 import { STORAGE_KEY, type StoredData } from '../../storage/schema'
+import { seedCompletedOnboarding } from '../../test/seed'
 
 function renderSettings() {
   return render(
@@ -37,6 +38,7 @@ function goalSection() {
 describe('設定画面: 価値尺度', () => {
   beforeEach(() => {
     window.localStorage.clear()
+    seedCompletedOnboarding()
   })
   afterEach(() => cleanup())
 
@@ -112,6 +114,7 @@ describe('設定画面: 価値尺度', () => {
 describe('設定画面: 節約目標', () => {
   beforeEach(() => {
     window.localStorage.clear()
+    seedCompletedOnboarding()
   })
   afterEach(() => cleanup())
 
@@ -193,6 +196,7 @@ describe('設定画面: 節約目標', () => {
 describe('設定で登録した価値尺度が購入判断画面に反映される', () => {
   beforeEach(() => {
     window.localStorage.clear()
+    seedCompletedOnboarding()
   })
   afterEach(() => cleanup())
 
