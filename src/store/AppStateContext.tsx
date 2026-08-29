@@ -3,25 +3,40 @@ import { detectNewAchievements } from '../domain/achievementUnlock'
 import { generateId } from '../domain/id'
 import { LocalStorageRepository } from '../storage/localStorageRepository'
 import type { StoredData } from '../storage/schema'
-import type { Achievement, Decision } from '../types/domain'
+import type { Achievement, Decision, Goal, ValueItem } from '../types/domain'
 import {
   AppStateContext,
   type AppStateContextValue,
+  type GoalInput,
   type RecordDecisionInput,
   type RecordDecisionResult,
+  type ValueItemInput,
 } from './context'
+import * as mutations from './mutations'
 
 const repository = new LocalStorageRepository()
 
 /**
  * アプリ全体のデータを保持し、ブラウザ内保存と同期する。
  * 起動時に一度だけ読み込み、以後は変更のたびに保存する。
+ *
+ * すべての変更はstore/mutations.tsの純粋関数 `(prev, args) => next` を通す。
+ * setDataを関数型で呼ぶことで、直前の呼び出しの結果を取りこぼさない
+ * （第3ループでの指摘を踏まえた設計）。
  */
 export function AppStateProvider({ children }: { children: ReactNode }) {
   const [initial] = useState(() => repository.load())
   const [data, setData] = useState<StoredData>(initial.data)
 
   const value = useMemo<AppStateContextValue>(() => {
+    function applyAndSave(mutate: (prev: StoredData) => StoredData): void {
+      setData((prev) => {
+        const nextData = mutate(prev)
+        repository.save(nextData)
+        return nextData
+      })
+    }
+
     const recordDecision = (input: RecordDecisionInput): RecordDecisionResult => {
       const now = new Date()
       const decision: Decision = {
@@ -35,31 +50,85 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         resolvedAt: input.outcome === 'pending' ? undefined : now.toISOString(),
       }
 
-      // 新規実績はここでは仮計算し、保存する値は下の関数型更新で確定させる。
-      // setDataを関数型で書くことで、短時間に複数回呼ばれても前の呼び出しの
-      // 結果を取りこぼさない（非関数型のsetDataだと、再描画前の古いdataを
-      // 参照した2回目の呼び出しが1回目の結果を上書きしてしまう）。
+      // 呼び出し元へ即座に返す値は、この時点のdataから計算する（通常の単発呼び出しでは正確）。
+      // 実際に保存されるデータは下のapplyAndSave内で、常に最新のprevから再計算する。
       const newAchievements: Achievement[] = detectNewAchievements(
         [...data.decisions, decision],
         data.achievements,
         now,
       )
 
-      setData((prev) => {
+      applyAndSave((prev) => {
         const decisions = [...prev.decisions, decision]
         const achievements = [
           ...prev.achievements,
           ...detectNewAchievements(decisions, prev.achievements, now),
         ]
-        const nextData: StoredData = { ...prev, decisions, achievements }
-        repository.save(nextData)
-        return nextData
+        return { ...prev, decisions, achievements }
       })
 
       return { decision, newAchievements }
     }
 
-    return { data, persistenceUnavailable: initial.persistenceUnavailable, recordDecision }
+    const addValueItem = (input: ValueItemInput): ValueItem => {
+      const item: ValueItem = {
+        id: generateId(),
+        name: input.name,
+        price: input.price,
+        createdAt: new Date().toISOString(),
+      }
+      applyAndSave((prev) => mutations.addValueItem(prev, item))
+      return item
+    }
+
+    const updateValueItem = (id: string, input: ValueItemInput): void => {
+      applyAndSave((prev) =>
+        mutations.updateValueItem(prev, { id, name: input.name, price: input.price }),
+      )
+    }
+
+    const removeValueItem = (id: string): void => {
+      applyAndSave((prev) => mutations.removeValueItem(prev, id))
+    }
+
+    const addGoal = (input: GoalInput): Goal => {
+      const goal: Goal = {
+        id: generateId(),
+        title: input.title,
+        targetAmount: input.targetAmount,
+        isPriority: false,
+        createdAt: new Date().toISOString(),
+      }
+      applyAndSave((prev) => mutations.addGoal(prev, goal))
+      return goal
+    }
+
+    const updateGoal = (id: string, input: GoalInput): void => {
+      applyAndSave((prev) =>
+        mutations.updateGoal(prev, { id, title: input.title, targetAmount: input.targetAmount }),
+      )
+    }
+
+    const removeGoal = (id: string): void => {
+      applyAndSave((prev) => mutations.removeGoal(prev, id))
+    }
+
+    const setPriorityGoal = (id: string | null): void => {
+      applyAndSave((prev) => mutations.setPriorityGoal(prev, id))
+    }
+
+    return {
+      data,
+      persistenceUnavailable: initial.persistenceUnavailable,
+      recordDecision,
+      addValueItem,
+      updateValueItem,
+      removeValueItem,
+      addGoal,
+      updateGoal,
+      removeGoal,
+      setPriorityGoal,
+    }
   }, [data, initial.persistenceUnavailable])
 
   return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>
