@@ -35,7 +35,7 @@ export function GoalSection({
       onRemove={onRemove}
       renderNameSuffix={(goal) =>
         goal.isPriority ? (
-          <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-bold text-sky-700">
+          <span className="shrink-0 rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-bold whitespace-nowrap text-sky-700">
             優先目標
           </span>
         ) : null

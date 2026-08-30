@@ -197,6 +197,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     return {
       data,
       persistenceUnavailable: initial.persistenceUnavailable,
+      recoveredFromCorruption: initial.recoveredFromCorruption,
       recordDecision,
       resolvePending,
       updateDecision,
@@ -216,7 +217,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       dismissMonthlySummary,
       resetAllData,
     }
-  }, [data, initial.persistenceUnavailable])
+  }, [data, initial.persistenceUnavailable, initial.recoveredFromCorruption])
 
   return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>
 }

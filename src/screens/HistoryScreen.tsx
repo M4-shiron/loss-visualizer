@@ -18,8 +18,10 @@ export function HistoryScreen() {
       <div className="mb-4 flex rounded-xl bg-slate-200/60 p-1" role="tablist">
         <button
           type="button"
+          id="history-tab-records"
           role="tab"
           aria-selected={tab === 'records'}
+          aria-controls="history-panel-records"
           onClick={() => setTab('records')}
           className={`min-h-9 flex-1 rounded-lg text-sm font-bold ${
             tab === 'records' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
@@ -29,8 +31,10 @@ export function HistoryScreen() {
         </button>
         <button
           type="button"
+          id="history-tab-insights"
           role="tab"
           aria-selected={tab === 'insights'}
+          aria-controls="history-panel-insights"
           onClick={() => setTab('insights')}
           className={`min-h-9 flex-1 rounded-lg text-sm font-bold ${
             tab === 'insights' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
@@ -40,7 +44,15 @@ export function HistoryScreen() {
         </button>
       </div>
 
-      {tab === 'records' ? <RecordsTab /> : <InsightsTab />}
+      {tab === 'records' ? (
+        <div role="tabpanel" id="history-panel-records" aria-labelledby="history-tab-records" tabIndex={0}>
+          <RecordsTab />
+        </div>
+      ) : (
+        <div role="tabpanel" id="history-panel-insights" aria-labelledby="history-tab-insights" tabIndex={0}>
+          <InsightsTab />
+        </div>
+      )}
     </>
   )
 }

@@ -169,7 +169,7 @@ export function DecideScreen() {
             <button
               type="button"
               onClick={() => chooseOutcome('skipped')}
-              className="min-h-14 w-full rounded-2xl bg-emerald-600 text-base font-bold text-white transition-transform active:scale-[0.98]"
+              className="min-h-14 w-full rounded-2xl bg-emerald-700 text-base font-bold text-white transition-transform active:scale-[0.98]"
             >
               やめる
             </button>
@@ -381,7 +381,7 @@ function ResultStep({
   const reasonLabel = purchaseReasonLabel(purchaseReason)
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5" role="status" aria-live="polite">
       {outcome === 'skipped' ? (
         <div className="animate-pop-in rounded-2xl bg-emerald-50 p-6 text-center">
           <p className="text-sm font-semibold text-emerald-700">守れました</p>

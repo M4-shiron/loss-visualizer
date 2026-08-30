@@ -88,7 +88,7 @@ export function BottomNav() {
               className={({ isActive }) =>
                 [
                   'flex min-h-14 flex-col items-center justify-center gap-0.5 py-2 text-xs transition-colors',
-                  isActive ? 'text-emerald-600' : 'text-slate-500',
+                  isActive ? 'text-emerald-700' : 'text-slate-500',
                 ].join(' ')
               }
             >

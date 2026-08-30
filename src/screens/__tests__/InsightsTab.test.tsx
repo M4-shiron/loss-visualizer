@@ -59,8 +59,10 @@ describe('振り返りタブ: 空データでもクラッシュしない', () =>
     goToInsights()
 
     expect(screen.getAllByText('まだ確定した節約がありません。').length).toBeGreaterThan(0)
-    expect(screen.queryByText('価値尺度への到達度')).not.toBeInTheDocument()
-    expect(screen.queryByText('目標への到達度')).not.toBeInTheDocument()
+    // 価値尺度・目標が未登録の場合、セクションごと消すのではなく設定への導線を表示する（第9ループ）。
+    expect(screen.getByText('価値尺度への到達度')).toBeInTheDocument()
+    expect(screen.getByText('目標への到達度')).toBeInTheDocument()
+    expect(screen.getAllByRole('link', { name: '設定で登録する' })).toHaveLength(2)
     // 実績は「未解除」の節目一覧として、判断が0件でも表示される（空状態にはならない）。
     expect(screen.getByText('累計1,000円まで、あと1,000円')).toBeInTheDocument()
   })

@@ -31,6 +31,24 @@ a {
   -webkit-tap-highlight-color: transparent;
 }
 
+/*
+  キーボード操作時のフォーカス位置を明示する（WCAG 2.4.7 Focus Visible）。
+  マウス・タッチ操作では出さない（:focus-visible）。outline-offsetで要素の外側に
+  描くため、ボタン自体の背景色に関わらず周囲の背景（薄いグレー〜白）の上に見える。
+  一部の文字入力欄は focus:outline-none + 枠線の色変化で独自の指標を持つため、
+  この既定スタイルより優先される必要がある。Tailwind v4のユーティリティは
+  @layer utilities に属し、CSSレイヤーは詳細度より先に評価されるため、
+  このルールを @layer base に入れて必ずutilitiesより低い優先度にする
+  （そうしないと詳細度に関わらずこちらが勝ってしまう）。
+*/
+@layer base {
+  :focus-visible {
+    outline: 2px solid #059669;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
 /* 「やめる」を選んだ直後の達成感の演出（§15）。CSSのみで完結させ、JSのタイミング依存を避ける。 */
 @keyframes pop-in {
   0% {

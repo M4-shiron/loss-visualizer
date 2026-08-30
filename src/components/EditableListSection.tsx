@@ -56,7 +56,7 @@ export function EditableListSection<T extends { id: string }>({
           <button
             type="button"
             onClick={() => setOpenForm('add')}
-            className="min-h-9 rounded-xl bg-emerald-600 px-3 text-xs font-bold text-white"
+            className="min-h-9 rounded-xl bg-emerald-700 px-3 text-xs font-bold text-white"
           >
             ＋追加
           </button>
@@ -96,7 +96,7 @@ export function EditableListSection<T extends { id: string }>({
               {confirmingDeleteId === item.id ? (
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-red-700">削除しますか？</span>
-                  <div className="flex gap-2">
+                  <div className="flex gap-3">
                     <button
                       type="button"
                       onClick={() => setConfirmingDeleteId(null)}
@@ -118,26 +118,26 @@ export function EditableListSection<T extends { id: string }>({
                 </div>
               ) : (
                 <>
-                  <div className="flex items-center justify-between">
-                    <div>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
                       <div className="flex items-center gap-1.5">
-                        <p className="text-sm font-bold text-slate-900">{getName(item)}</p>
+                        <p className="text-sm font-bold text-slate-900 break-words">{getName(item)}</p>
                         {renderNameSuffix ? renderNameSuffix(item) : null}
                       </div>
                       <p className="text-xs text-slate-500">{formatYen(getAmount(item))}</p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex shrink-0 gap-3">
                       <button
                         type="button"
                         onClick={() => setOpenForm({ editId: item.id })}
-                        className="min-h-8 rounded-lg border border-slate-300 bg-white px-2.5 text-xs font-bold text-slate-600"
+                        className="min-h-8 shrink-0 rounded-lg border border-slate-300 bg-white px-2.5 text-xs font-bold whitespace-nowrap text-slate-600"
                       >
                         編集
                       </button>
                       <button
                         type="button"
                         onClick={() => setConfirmingDeleteId(item.id)}
-                        className="min-h-8 rounded-lg border border-red-200 bg-white px-2.5 text-xs font-bold text-red-600"
+                        className="min-h-8 shrink-0 rounded-lg border border-red-200 bg-white px-2.5 text-xs font-bold whitespace-nowrap text-red-600"
                       >
                         削除
                       </button>

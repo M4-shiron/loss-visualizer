@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useId, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { getCategoryName, PROMPT_CATEGORIES } from '../../data/prompts'
 import { effectiveDate } from '../../domain/decisions'
@@ -103,7 +103,7 @@ export function RecordsTab() {
             aria-pressed={filter === f.id}
             className={`min-h-9 rounded-full border px-3 text-xs font-bold ${
               filter === f.id
-                ? 'border-emerald-600 bg-emerald-600 text-white'
+                ? 'border-emerald-700 bg-emerald-700 text-white'
                 : 'border-slate-200 bg-white text-slate-600'
             }`}
           >
@@ -136,7 +136,7 @@ export function RecordsTab() {
                     ) : confirmingDeleteId === decision.id ? (
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium text-red-700">削除しますか？</span>
-                        <div className="flex gap-2">
+                        <div className="flex gap-3">
                           <button
                             type="button"
                             onClick={() => setConfirmingDeleteId(null)}
@@ -197,7 +197,7 @@ export function RecordsTab() {
                                 理由：{purchaseReasonLabel(decision.purchaseReason)}
                               </p>
                             ) : null}
-                            <div className="mt-2 flex gap-2">
+                            <div className="mt-2 flex gap-3">
                               <button
                                 type="button"
                                 onClick={(e) => {
@@ -259,6 +259,8 @@ function DecisionEditForm({ decision, onSave, onCancel }: DecisionEditFormProps)
 
   const amount = Number(amountDigits || '0')
   const amountValid = isValidAmount(amount)
+  const showAmountError = amountDigits.length > 0 && !amountValid
+  const amountErrorId = useId()
 
   function handleAmountChange(rawValue: string) {
     setAmountDigits(rawValue.replace(/[^0-9]/g, '').slice(0, MAX_AMOUNT_DIGITS))
@@ -274,10 +276,14 @@ function DecisionEditForm({ decision, onSave, onCancel }: DecisionEditFormProps)
           pattern="[0-9]*"
           value={amountDigits}
           onChange={(e) => handleAmountChange(e.target.value)}
+          aria-invalid={showAmountError}
+          aria-describedby={showAmountError ? amountErrorId : undefined}
           className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2 text-base text-slate-900 focus:border-emerald-600 focus:outline-none"
         />
-        {amountDigits.length > 0 && !amountValid ? (
-          <p className="mt-1 text-xs text-red-600">1〜{formatYen(MAX_AMOUNT)}の範囲で入力してください</p>
+        {showAmountError ? (
+          <p id={amountErrorId} className="mt-1 text-xs text-red-600">
+            1〜{formatYen(MAX_AMOUNT)}の範囲で入力してください
+          </p>
         ) : null}
       </div>
 
@@ -359,7 +365,7 @@ function DecisionEditForm({ decision, onSave, onCancel }: DecisionEditFormProps)
           type="button"
           disabled={!amountValid}
           onClick={() => onSave({ amount, categoryId, itemName, outcome, purchaseReason })}
-          className="min-h-11 flex-1 rounded-xl bg-emerald-600 text-sm font-bold text-white disabled:bg-slate-300"
+          className="min-h-11 flex-1 rounded-xl bg-emerald-700 text-sm font-bold text-white disabled:bg-slate-300"
         >
           保存する
         </button>

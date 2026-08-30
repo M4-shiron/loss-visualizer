@@ -169,7 +169,7 @@ function PendingItem({
           <button
             type="button"
             onClick={onSkip}
-            className="min-h-11 flex-1 rounded-xl bg-emerald-600 text-sm font-bold text-white"
+            className="min-h-11 flex-1 rounded-xl bg-emerald-700 text-sm font-bold text-white"
           >
             やめる
           </button>

@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppLayout } from './components/AppLayout'
 import { RequireOnboarding } from './components/RequireOnboarding'
+import { SystemNotices } from './components/SystemNotices'
 import { DecideScreen } from './screens/DecideScreen'
 import { HistoryScreen } from './screens/HistoryScreen'
 import { HomeScreen } from './screens/HomeScreen'
@@ -13,6 +14,8 @@ import { AppStateProvider } from './store/AppStateContext'
 export function App() {
   return (
     <AppStateProvider>
+      {/* どの画面からでも必ず気づける位置に置く（保存に関する重要な状態のため）。 */}
+      <SystemNotices />
       <Routes>
         {/* 初回オンボーディングが未完了なら、以下すべてから誘導する */}
         <Route element={<RequireOnboarding />}>

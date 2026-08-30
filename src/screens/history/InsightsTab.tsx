@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { BarChart } from '../../components/BarChart'
 import { StatTile } from '../../components/StatTile'
 import {
@@ -14,7 +15,20 @@ import {
 } from '../../domain/decisions'
 import { formatShortDate, formatYen } from '../../domain/format'
 import { goalProgressPercent } from '../../domain/goals'
+import { ROUTES } from '../../routes'
 import { useAppState } from '../../store/useAppState'
+
+/** 価値尺度・節約目標が未登録のときの空状態（設定画面への導線）。 */
+function EmptySettingsNudge({ message }: { message: string }) {
+  return (
+    <div className="rounded-xl border border-dashed border-slate-200 bg-white p-3">
+      <p className="text-xs text-slate-500">{message}</p>
+      <Link to={ROUTES.settings} className="mt-2 inline-block text-xs font-bold text-emerald-700 underline">
+        設定で登録する
+      </Link>
+    </div>
+  )
+}
 
 /** 履歴画面の「振り返り」タブ。時系列・カテゴリ別グラフ、到達度、実績（§14, §15）。 */
 export function InsightsTab() {
@@ -82,9 +96,9 @@ export function InsightsTab() {
         ) : null}
       </section>
 
-      {data.valueItems.length > 0 ? (
-        <section>
-          <h2 className="mb-2 text-sm font-bold text-slate-900">価値尺度への到達度</h2>
+      <section>
+        <h2 className="mb-2 text-sm font-bold text-slate-900">価値尺度への到達度</h2>
+        {data.valueItems.length > 0 ? (
           <ul className="space-y-2">
             {valueProgress.map(({ item, multiplier }) => (
               <li key={item.id} className="rounded-xl bg-white p-3 shadow-sm">
@@ -97,12 +111,14 @@ export function InsightsTab() {
               </li>
             ))}
           </ul>
-        </section>
-      ) : null}
+        ) : (
+          <EmptySettingsNudge message="価値尺度を登録すると、節約額をわかりやすいモノに置き換えて確認できます。" />
+        )}
+      </section>
 
-      {data.goals.length > 0 ? (
-        <section>
-          <h2 className="mb-2 text-sm font-bold text-slate-900">目標への到達度</h2>
+      <section>
+        <h2 className="mb-2 text-sm font-bold text-slate-900">目標への到達度</h2>
+        {data.goals.length > 0 ? (
           <ul className="space-y-2">
             {data.goals.map((goal) => {
               const percent = Math.round(goalProgressPercent(goal, totalAmount) * 10) / 10
@@ -122,8 +138,10 @@ export function InsightsTab() {
               )
             })}
           </ul>
-        </section>
-      ) : null}
+        ) : (
+          <EmptySettingsNudge message="節約目標を登録すると、ここに達成率が表示されます。" />
+        )}
+      </section>
 
       <section>
         <h2 className="mb-2 text-sm font-bold text-slate-900">実績</h2>

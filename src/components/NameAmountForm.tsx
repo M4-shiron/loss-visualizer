@@ -36,11 +36,15 @@ export function NameAmountForm({
   )
   const nameInputId = useId()
   const amountInputId = useId()
+  const nameErrorId = useId()
+  const amountErrorId = useId()
 
   const amount = Number(amountDigits || '0')
   const nameValid = isValidName(name)
   const amountValid = isValidAmount(amount)
   const canSubmit = nameValid && amountValid
+  const showNameError = name.length > 0 && !nameValid
+  const showAmountError = amountDigits.length > 0 && !amountValid
 
   function handleAmountChange(rawValue: string) {
     const digitsOnly = rawValue.replace(/[^0-9]/g, '').slice(0, MAX_AMOUNT_DIGITS)
@@ -59,10 +63,14 @@ export function NameAmountForm({
           value={name}
           onChange={(e) => setName(e.target.value)}
           maxLength={NAME_MAX_LENGTH}
+          aria-invalid={showNameError}
+          aria-describedby={showNameError ? nameErrorId : undefined}
           className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2 text-base text-slate-900 focus:border-emerald-600 focus:outline-none"
         />
-        {name.length > 0 && !nameValid ? (
-          <p className="mt-1 text-xs text-red-600">1〜{NAME_MAX_LENGTH}文字で入力してください</p>
+        {showNameError ? (
+          <p id={nameErrorId} className="mt-1 text-xs text-red-600">
+            1〜{NAME_MAX_LENGTH}文字で入力してください
+          </p>
         ) : null}
       </div>
 
@@ -77,10 +85,12 @@ export function NameAmountForm({
           pattern="[0-9]*"
           value={amountDigits}
           onChange={(e) => handleAmountChange(e.target.value)}
+          aria-invalid={showAmountError}
+          aria-describedby={showAmountError ? amountErrorId : undefined}
           className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2 text-base text-slate-900 focus:border-emerald-600 focus:outline-none"
         />
-        {amountDigits.length > 0 && !amountValid ? (
-          <p className="mt-1 text-xs text-red-600">
+        {showAmountError ? (
+          <p id={amountErrorId} className="mt-1 text-xs text-red-600">
             1〜{formatYen(MAX_AMOUNT)}の範囲で入力してください
           </p>
         ) : null}
@@ -98,7 +108,7 @@ export function NameAmountForm({
           type="button"
           disabled={!canSubmit}
           onClick={() => onSubmit(name.trim(), amount)}
-          className="min-h-11 flex-1 rounded-xl bg-emerald-600 text-sm font-bold text-white disabled:bg-slate-300"
+          className="min-h-11 flex-1 rounded-xl bg-emerald-700 text-sm font-bold text-white disabled:bg-slate-300"
         >
           {submitLabel}
         </button>

@@ -51,6 +51,8 @@ export type AppStateContextValue = {
   data: StoredData
   /** 保存が使えない環境（プライベートブラウジング等）かどうか。 */
   persistenceUnavailable: boolean
+  /** 起動時に壊れた保存データを検出し、初期状態へフォールバックしたかどうか（このセッションの最初の読み込み時のみtrueになりうる）。 */
+  recoveredFromCorruption: boolean
   recordDecision: (input: RecordDecisionInput) => RecordDecisionResult
   /** 保留（あとで考える）を「やめる」「買う」で確定する。 */
   resolvePending: (id: string, input: ResolvePendingInput) => void

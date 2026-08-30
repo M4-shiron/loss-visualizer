@@ -55,7 +55,7 @@ export function HomeScreen() {
       </header>
 
       {/* ファーストビュー: 今月の確定節約額 + 購入判断への導線 */}
-      <section className="rounded-2xl bg-emerald-600 px-5 py-5 text-white shadow-lg shadow-emerald-600/20">
+      <section className="rounded-2xl bg-emerald-700 px-5 py-5 text-white shadow-lg shadow-emerald-700/20">
         <p className="text-xs font-medium text-emerald-50">今月、守れた金額</p>
         <p className="mt-1 text-4xl font-extrabold">{formatYen(monthlySavings)}</p>
         {!hasAnyDecision ? (
