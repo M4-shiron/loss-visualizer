@@ -1,10 +1,11 @@
-import { Link } from 'react-router-dom'
 import { GoalSection } from '../components/GoalSection'
-import { Placeholder } from '../components/Placeholder'
 import { ScreenHeader } from '../components/ScreenHeader'
 import { ValueItemSection } from '../components/ValueItemSection'
 import { totalConfirmedSavings } from '../domain/decisions'
-import { ROUTES } from '../routes'
+import { ArchiveSection } from './settings/ArchiveSection'
+import { CategorySection } from './settings/CategorySection'
+import { DataResetSection } from './settings/DataResetSection'
+import { NotificationSection } from './settings/NotificationSection'
 import { useAppState } from '../store/useAppState'
 
 export function SettingsScreen() {
@@ -33,20 +34,10 @@ export function SettingsScreen() {
           onSetPriority={setPriorityGoal}
         />
 
-        <Placeholder
-          loop={7}
-          items={[
-            '通知設定（保留・週次・月次）',
-            'カテゴリ設定',
-            'アーカイブの確認',
-            '全データのリセット',
-          ]}
-        />
-        <p className="text-center text-xs text-slate-400">
-          <Link to={ROUTES.onboarding} className="underline">
-            初回設定の画面を確認する
-          </Link>
-        </p>
+        <NotificationSection />
+        <CategorySection />
+        <ArchiveSection />
+        <DataResetSection />
       </div>
     </>
   )

@@ -170,3 +170,25 @@ describe('購入判断フロー', () => {
     expect(data.decisions).toHaveLength(1)
   })
 })
+
+describe('カテゴリの表示・非表示', () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+    seedCompletedOnboarding()
+  })
+  afterEach(() => cleanup())
+
+  it('非表示にしたカテゴリは選択肢から消える', () => {
+    seedCompletedOnboarding({
+      settings: {
+        onboardingCompleted: true,
+        notifications: { pendingReminder: true, weeklySummary: false, monthlySummary: false },
+        hiddenCategoryIds: ['game-charge'],
+      },
+    })
+    renderDecideScreen()
+
+    expect(screen.queryByRole('button', { name: 'ゲーム課金' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'コンビニ' })).toBeInTheDocument()
+  })
+})

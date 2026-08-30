@@ -1,7 +1,14 @@
 import { detectNewAchievements, recalculateAchievements } from '../domain/achievementUnlock'
 import { archiveExpiredPending } from '../domain/pending'
-import type { StoredData } from '../storage/schema'
-import type { Decision, Goal, PurchaseReason, ValueItem } from '../types/domain'
+import { createEmptyData, type StoredData } from '../storage/schema'
+import type {
+  CategoryId,
+  Decision,
+  Goal,
+  NotificationSettings,
+  PurchaseReason,
+  ValueItem,
+} from '../types/domain'
 
 /**
  * データ変更をすべて `(prev, args) => next` の純粋関数として定義する。
@@ -133,4 +140,68 @@ export function removeDecision(prev: StoredData, args: { id: string; now: Date }
 /** 48時間経過した未対応の保留をアーカイブする（§10）。 */
 export function archiveExpiredPendingDecisions(prev: StoredData, now: Date): StoredData {
   return { ...prev, decisions: archiveExpiredPending(prev.decisions, now) }
+}
+
+export function updateNotificationSettings(
+  prev: StoredData,
+  update: Partial<NotificationSettings>,
+): StoredData {
+  return {
+    ...prev,
+    settings: { ...prev.settings, notifications: { ...prev.settings.notifications, ...update } },
+  }
+}
+
+/**
+ * カテゴリの表示・非表示を切り替える（§19）。非表示にしようとした結果、
+ * 表示されるカテゴリが1つもなくなる場合は何も変更しない（最低1つは残す）。
+ */
+export function toggleCategoryVisibility(
+  prev: StoredData,
+  categoryId: CategoryId,
+  allCategoryIds: CategoryId[],
+): StoredData {
+  const current = prev.settings.hiddenCategoryIds ?? []
+  const isHidden = current.includes(categoryId)
+
+  if (isHidden) {
+    return {
+      ...prev,
+      settings: {
+        ...prev.settings,
+        hiddenCategoryIds: current.filter((id) => id !== categoryId),
+      },
+    }
+  }
+
+  const wouldRemainVisible = allCategoryIds.filter(
+    (id) => id !== categoryId && !current.includes(id),
+  )
+  if (wouldRemainVisible.length === 0) {
+    return prev
+  }
+
+  return {
+    ...prev,
+    settings: { ...prev.settings, hiddenCategoryIds: [...current, categoryId] },
+  }
+}
+
+export function dismissWeeklySummary(prev: StoredData, currentWeekKey: string): StoredData {
+  return {
+    ...prev,
+    settings: { ...prev.settings, lastDismissedWeeklySummaryWeek: currentWeekKey },
+  }
+}
+
+export function dismissMonthlySummary(prev: StoredData, currentMonthKey: string): StoredData {
+  return {
+    ...prev,
+    settings: { ...prev.settings, lastDismissedMonthlySummaryMonth: currentMonthKey },
+  }
+}
+
+/** 全データをリセットする（§19）。取り返しがつかないため、呼び出し側で確認を挟むこと。 */
+export function resetAllData(): StoredData {
+  return createEmptyData()
 }

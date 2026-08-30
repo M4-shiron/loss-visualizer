@@ -1,6 +1,15 @@
 import { createContext } from 'react'
 import type { StoredData } from '../storage/schema'
-import type { Achievement, CategoryId, Decision, Goal, Outcome, PurchaseReason, ValueItem } from '../types/domain'
+import type {
+  Achievement,
+  CategoryId,
+  Decision,
+  Goal,
+  NotificationSettings,
+  Outcome,
+  PurchaseReason,
+  ValueItem,
+} from '../types/domain'
 
 export type RecordDecisionInput = {
   amount: number
@@ -67,6 +76,17 @@ export type AppStateContextValue = {
    * 保留画面を開いたときにも同じ判定をやり直す（常時監視のタイマーは持たない）。
    */
   archiveExpiredPending: () => void
+
+  /** 保留リマインダー・週次まとめ・月次まとめの表示可否を切り替える（アプリ内表示。OS通知は使わない）。 */
+  updateNotificationSettings: (input: Partial<NotificationSettings>) => void
+  /** カテゴリの表示・非表示を切り替える。表示が0件になる変更は無視される。 */
+  toggleCategoryVisibility: (categoryId: CategoryId) => void
+  /** 今週の週次まとめを閉じる。同じ週の間は再表示しない。 */
+  dismissWeeklySummary: () => void
+  /** 今月の月次まとめを閉じる。同じ月の間は再表示しない。 */
+  dismissMonthlySummary: () => void
+  /** 全データを削除して初期状態に戻す。取り返しがつかない操作。 */
+  resetAllData: () => void
 }
 
 export const AppStateContext = createContext<AppStateContextValue | undefined>(undefined)

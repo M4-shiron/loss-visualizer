@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { StatTile } from '../components/StatTile'
+import { monthKeyOf, previousMonthSavings, previousWeekSavings, weekKey } from '../domain/analytics'
 import {
   monthlyConfirmedSavings,
   monthlySkipCount,
@@ -9,6 +10,7 @@ import {
 } from '../domain/decisions'
 import { formatYen } from '../domain/format'
 import { findPriorityGoal, goalProgressPercent } from '../domain/goals'
+import { needsPendingReminder } from '../domain/pending'
 import { ROUTES } from '../routes'
 import { useAppState } from '../store/useAppState'
 
@@ -17,7 +19,7 @@ import { useAppState } from '../store/useAppState'
  * これらはファーストビューに収める。その他の集計・目標情報は縦スクロールを許容する（§12）。
  */
 export function HomeScreen() {
-  const { data } = useAppState()
+  const { data, dismissWeeklySummary, dismissMonthlySummary } = useAppState()
   const now = new Date()
 
   const monthlySavings = monthlyConfirmedSavings(data.decisions, now)
@@ -27,6 +29,21 @@ export function HomeScreen() {
   const totalCount = totalSkipCount(data.decisions)
   const priorityGoal = findPriorityGoal(data.goals)
   const hasAnyDecision = data.decisions.length > 0
+
+  const pendingNeedingReminder = data.decisions.filter((d) => needsPendingReminder(d, now)).length
+  const showPendingReminder = data.settings.notifications.pendingReminder && pendingNeedingReminder > 0
+
+  const currentWeekKey = weekKey(now)
+  const showWeeklySummary =
+    data.settings.notifications.weeklySummary &&
+    data.settings.lastDismissedWeeklySummaryWeek !== currentWeekKey
+  const lastWeekSavings = previousWeekSavings(data.decisions, now)
+
+  const currentMonthKey = monthKeyOf(now)
+  const showMonthlySummary =
+    data.settings.notifications.monthlySummary &&
+    data.settings.lastDismissedMonthlySummaryMonth !== currentMonthKey
+  const lastMonthSavings = previousMonthSavings(data.decisions, now)
 
   return (
     <>
@@ -56,6 +73,36 @@ export function HomeScreen() {
       </Link>
 
       <div className="mt-6 space-y-4">
+        {showPendingReminder ? (
+          <Link
+            to={ROUTES.pending}
+            className="flex items-center justify-between rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3"
+          >
+            <span className="text-sm font-bold text-amber-800">
+              保留リマインダー：{pendingNeedingReminder}件、そろそろ決めませんか？
+            </span>
+            <span className="text-amber-600" aria-hidden="true">
+              ›
+            </span>
+          </Link>
+        ) : null}
+
+        {showWeeklySummary ? (
+          <SummaryCard
+            title="週次まとめ"
+            message={`先週は${formatYen(lastWeekSavings)}守れました。`}
+            onClose={dismissWeeklySummary}
+          />
+        ) : null}
+
+        {showMonthlySummary ? (
+          <SummaryCard
+            title="月次まとめ"
+            message={`先月は${formatYen(lastMonthSavings)}守れました。`}
+            onClose={dismissMonthlySummary}
+          />
+        ) : null}
+
         {priorityGoal ? (
           <section className="rounded-2xl bg-white p-4 shadow-sm">
             <p className="text-sm font-bold text-slate-900">{priorityGoal.title}</p>
@@ -79,5 +126,33 @@ export function HomeScreen() {
         </div>
       </div>
     </>
+  )
+}
+
+type SummaryCardProps = {
+  title: string
+  message: string
+  onClose: () => void
+}
+
+/** 週次・月次まとめのカード。アプリ内表示であり、OSの通知ではない。 */
+function SummaryCard({ title, message, onClose }: SummaryCardProps) {
+  return (
+    <div className="rounded-2xl border border-sky-200 bg-sky-50 p-4">
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-xs font-bold text-sky-700">{title}</p>
+          <p className="mt-0.5 text-sm font-bold text-sky-900">{message}</p>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label={`${title}を閉じる`}
+          className="text-sky-500"
+        >
+          ×
+        </button>
+      </div>
+    </div>
   )
 }

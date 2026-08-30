@@ -105,4 +105,35 @@ describe('LocalStorageRepository', () => {
     const saveResult = repo.save(createEmptyData())
     expect(saveResult).toBe(false)
   })
+
+  it('第8ループより前の保存データ（新項目を持たない）も、壊れたデータ扱いにせずそのまま読める', () => {
+    // 第7ループ以前のsettingsの形。hiddenCategoryIds等は存在しない。
+    const legacyData = {
+      schemaVersion: 1,
+      decisions: [
+        {
+          id: 'd1',
+          amount: 500,
+          categoryId: 'convenience',
+          outcome: 'skipped',
+          createdAt: '2026-08-01T00:00:00.000Z',
+        },
+      ],
+      valueItems: [],
+      goals: [],
+      achievements: [],
+      settings: {
+        onboardingCompleted: true,
+        notifications: { pendingReminder: true, weeklySummary: false, monthlySummary: false },
+      },
+    }
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(legacyData))
+
+    const repo = new LocalStorageRepository()
+    const result = repo.load()
+
+    expect(result.recoveredFromCorruption).toBe(false)
+    expect(result.data).toEqual(legacyData)
+    expect(result.data.settings.hiddenCategoryIds).toBeUndefined()
+  })
 })

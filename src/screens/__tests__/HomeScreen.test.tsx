@@ -2,7 +2,9 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { App } from '../../App'
+import { monthKeyOf, weekKey } from '../../domain/analytics'
 import { seedCompletedOnboarding } from '../../test/seed'
+import { STORAGE_KEY, type StoredData } from '../../storage/schema'
 import type { Decision, Goal } from '../../types/domain'
 
 function renderHome() {
@@ -114,5 +116,122 @@ describe('ホーム', () => {
     fireEvent.click(screen.getByRole('button', { name: 'ホームへ' }))
 
     expect(monthlySavingsText(container)).toBe('250円')
+  })
+})
+
+function readStoredData(): StoredData {
+  const raw = window.localStorage.getItem(STORAGE_KEY)
+  if (!raw) throw new Error('保存データが見つかりません')
+  return JSON.parse(raw) as StoredData
+}
+
+describe('ホーム: 保留リマインダー', () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+  })
+  afterEach(() => cleanup())
+
+  it('24時間以上経過した保留があり、設定がONならバナーが出る', () => {
+    const old = makeDecision({
+      outcome: 'pending',
+      createdAt: new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString(),
+    })
+    seedCompletedOnboarding({ decisions: [old] })
+    renderHome()
+
+    expect(screen.getByText(/保留リマインダー：1件/)).toBeInTheDocument()
+  })
+
+  it('設定がOFFならバナーは出ない', () => {
+    const old = makeDecision({
+      outcome: 'pending',
+      createdAt: new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString(),
+    })
+    seedCompletedOnboarding({
+      decisions: [old],
+      settings: {
+        onboardingCompleted: true,
+        notifications: { pendingReminder: false, weeklySummary: false, monthlySummary: false },
+      },
+    })
+    renderHome()
+
+    expect(screen.queryByText(/保留リマインダー/)).not.toBeInTheDocument()
+  })
+})
+
+describe('ホーム: 週次・月次まとめ', () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+  })
+  afterEach(() => cleanup())
+
+  it('週次まとめがONのとき、先週の確定節約額が表示される', () => {
+    const now = new Date()
+    const lastWeek = new Date(now)
+    lastWeek.setDate(lastWeek.getDate() - 7)
+    seedCompletedOnboarding({
+      decisions: [
+        makeDecision({ amount: 600, outcome: 'skipped', createdAt: lastWeek.toISOString() }),
+      ],
+      settings: {
+        onboardingCompleted: true,
+        notifications: { pendingReminder: true, weeklySummary: true, monthlySummary: false },
+      },
+    })
+    renderHome()
+
+    expect(screen.getByText('先週は600円守れました。')).toBeInTheDocument()
+  })
+
+  it('週次まとめを閉じると消え、再読み込みしても同じ週は再表示されない', () => {
+    seedCompletedOnboarding({
+      settings: {
+        onboardingCompleted: true,
+        notifications: { pendingReminder: true, weeklySummary: true, monthlySummary: false },
+      },
+    })
+    renderHome()
+
+    fireEvent.click(screen.getByRole('button', { name: '週次まとめを閉じる' }))
+    expect(screen.queryByText('週次まとめ')).not.toBeInTheDocument()
+
+    const data = readStoredData()
+    expect(data.settings.lastDismissedWeeklySummaryWeek).toBe(weekKey(new Date()))
+
+    cleanup()
+    renderHome()
+    expect(screen.queryByText('週次まとめ')).not.toBeInTheDocument()
+  })
+
+  it('デフォルト（OFF）では週次・月次まとめは出ない', () => {
+    seedCompletedOnboarding()
+    renderHome()
+
+    expect(screen.queryByText('週次まとめ')).not.toBeInTheDocument()
+    expect(screen.queryByText('月次まとめ')).not.toBeInTheDocument()
+  })
+
+  it('月次まとめがONのとき、先月の確定節約額が表示され、閉じると同じ月は再表示されない', () => {
+    const now = new Date()
+    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 10)
+    seedCompletedOnboarding({
+      decisions: [
+        makeDecision({ amount: 900, outcome: 'skipped', createdAt: lastMonth.toISOString() }),
+      ],
+      settings: {
+        onboardingCompleted: true,
+        notifications: { pendingReminder: true, weeklySummary: false, monthlySummary: true },
+      },
+    })
+    renderHome()
+
+    expect(screen.getByText('先月は900円守れました。')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: '月次まとめを閉じる' }))
+    expect(screen.queryByText('月次まとめ')).not.toBeInTheDocument()
+
+    const data = readStoredData()
+    expect(data.settings.lastDismissedMonthlySummaryMonth).toBe(monthKeyOf(new Date()))
   })
 })

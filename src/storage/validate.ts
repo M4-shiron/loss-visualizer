@@ -91,16 +91,46 @@ function isAchievement(value: unknown): value is Achievement {
   return typeof value.id === 'string' && isIsoDateString(value.unlockedAt)
 }
 
+function isCategoryId(value: unknown): value is CategoryId {
+  return typeof value === 'string' && CATEGORY_IDS.includes(value as CategoryId)
+}
+
+/**
+ * `hiddenCategoryIds` 以降は第8ループで追加した任意項目。
+ * 存在しない場合（旧データ）は許容し、存在する場合のみ型を検証する。
+ * こうすることで、これらの項目を持たない旧データも壊れたデータ扱いにならない。
+ */
 function isSettings(value: unknown): value is Settings {
   if (!isRecord(value)) return false
   if (typeof value.onboardingCompleted !== 'boolean') return false
   const notifications = value.notifications
   if (!isRecord(notifications)) return false
-  return (
-    typeof notifications.pendingReminder === 'boolean' &&
-    typeof notifications.weeklySummary === 'boolean' &&
-    typeof notifications.monthlySummary === 'boolean'
-  )
+  if (
+    typeof notifications.pendingReminder !== 'boolean' ||
+    typeof notifications.weeklySummary !== 'boolean' ||
+    typeof notifications.monthlySummary !== 'boolean'
+  ) {
+    return false
+  }
+
+  if (value.hiddenCategoryIds !== undefined) {
+    if (!Array.isArray(value.hiddenCategoryIds) || !value.hiddenCategoryIds.every(isCategoryId)) {
+      return false
+    }
+  }
+  if (
+    value.lastDismissedWeeklySummaryWeek !== undefined &&
+    typeof value.lastDismissedWeeklySummaryWeek !== 'string'
+  ) {
+    return false
+  }
+  if (
+    value.lastDismissedMonthlySummaryMonth !== undefined &&
+    typeof value.lastDismissedMonthlySummaryMonth !== 'string'
+  ) {
+    return false
+  }
+  return true
 }
 
 function hasUniqueIds(items: { id: string }[]): boolean {

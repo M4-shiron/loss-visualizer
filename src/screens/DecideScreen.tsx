@@ -9,7 +9,7 @@ import { formatYen } from '../domain/format'
 import { findPriorityGoal, goalProgressPercent } from '../domain/goals'
 import { PURCHASE_REASON_OPTIONS, purchaseReasonLabel } from '../domain/purchaseReason'
 import { MAX_AMOUNT_DIGITS } from '../domain/validation'
-import { pickRandomPrompt, PROMPT_CATEGORIES } from '../data/prompts'
+import { pickRandomPrompt, visibleCategories, type PromptCategory } from '../data/prompts'
 import type { RecordDecisionResult } from '../store/context'
 import { useAppState } from '../store/useAppState'
 import type { CategoryId, Goal, Outcome, PurchaseReason } from '../types/domain'
@@ -24,6 +24,7 @@ type Step = 'input' | 'judge' | 'purchaseReason' | 'result'
 export function DecideScreen() {
   const navigate = useNavigate()
   const { data, recordDecision } = useAppState()
+  const categories = visibleCategories(data.settings.hiddenCategoryIds ?? [])
 
   const [step, setStep] = useState<Step>('input')
   const [categoryId, setCategoryId] = useState<CategoryId | null>(null)
@@ -126,6 +127,7 @@ export function DecideScreen() {
       >
         {step === 'input' ? (
           <InputStep
+            categories={categories}
             categoryId={categoryId}
             onSelectCategory={setCategoryId}
             amountDigits={amountDigits}
@@ -193,6 +195,7 @@ export function DecideScreen() {
 }
 
 type InputStepProps = {
+  categories: PromptCategory[]
   categoryId: CategoryId | null
   onSelectCategory: (id: CategoryId) => void
   amountDigits: string
@@ -204,6 +207,7 @@ type InputStepProps = {
 }
 
 function InputStep({
+  categories,
   categoryId,
   onSelectCategory,
   amountDigits,
@@ -220,7 +224,7 @@ function InputStep({
       <section>
         <h2 className="mb-2 text-sm font-semibold text-slate-700">何に迷っていますか？</h2>
         <div className="grid grid-cols-2 gap-2">
-          {PROMPT_CATEGORIES.map((category) => (
+          {categories.map((category) => (
             <button
               key={category.id}
               type="button"

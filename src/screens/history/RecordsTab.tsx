@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { getCategoryName, PROMPT_CATEGORIES } from '../../data/prompts'
 import { effectiveDate } from '../../domain/decisions'
 import { formatShortDate, formatYen } from '../../domain/format'
@@ -15,6 +16,12 @@ const FILTERS: { id: Filter; label: string }[] = [
   { id: 'purchased', label: '買った' },
   { id: 'pendingOrArchived', label: '保留・アーカイブ' },
 ]
+
+const FILTER_IDS = FILTERS.map((f) => f.id)
+
+function isFilter(value: string | null): value is Filter {
+  return value !== null && (FILTER_IDS as string[]).includes(value)
+}
 
 const OUTCOME_LABEL: Record<Outcome, string> = {
   skipped: 'やめた',
@@ -39,7 +46,9 @@ function monthLabel(date: Date): string {
 /** 履歴の一覧・詳細・編集・削除（§13）。日付順（新しい順）に月別へグルーピングする。 */
 export function RecordsTab() {
   const { data, updateDecision, removeDecision } = useAppState()
-  const [filter, setFilter] = useState<Filter>('all')
+  const [searchParams] = useSearchParams()
+  const initialFilter = searchParams.get('filter')
+  const [filter, setFilter] = useState<Filter>(isFilter(initialFilter) ? initialFilter : 'all')
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null)

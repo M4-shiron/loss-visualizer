@@ -1,10 +1,12 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { detectNewAchievements } from '../domain/achievementUnlock'
+import { monthKeyOf, weekKey } from '../domain/analytics'
+import { ALL_CATEGORY_IDS } from '../data/prompts'
 import { generateId } from '../domain/id'
 import { shouldArchive } from '../domain/pending'
 import { LocalStorageRepository } from '../storage/localStorageRepository'
 import type { StoredData } from '../storage/schema'
-import type { Achievement, Decision, Goal, ValueItem } from '../types/domain'
+import type { Achievement, CategoryId, Decision, Goal, NotificationSettings, ValueItem } from '../types/domain'
 import {
   AppStateContext,
   type AppStateContextValue,
@@ -172,6 +174,26 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       applyAndSave((prev) => mutations.archiveExpiredPendingDecisions(prev, new Date()))
     }
 
+    const updateNotificationSettings = (input: Partial<NotificationSettings>): void => {
+      applyAndSave((prev) => mutations.updateNotificationSettings(prev, input))
+    }
+
+    const toggleCategoryVisibility = (categoryId: CategoryId): void => {
+      applyAndSave((prev) => mutations.toggleCategoryVisibility(prev, categoryId, ALL_CATEGORY_IDS))
+    }
+
+    const dismissWeeklySummary = (): void => {
+      applyAndSave((prev) => mutations.dismissWeeklySummary(prev, weekKey(new Date())))
+    }
+
+    const dismissMonthlySummary = (): void => {
+      applyAndSave((prev) => mutations.dismissMonthlySummary(prev, monthKeyOf(new Date())))
+    }
+
+    const resetAllData = (): void => {
+      applyAndSave(() => mutations.resetAllData())
+    }
+
     return {
       data,
       persistenceUnavailable: initial.persistenceUnavailable,
@@ -188,6 +210,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       setPriorityGoal,
       completeOnboarding,
       archiveExpiredPending,
+      updateNotificationSettings,
+      toggleCategoryVisibility,
+      dismissWeeklySummary,
+      dismissMonthlySummary,
+      resetAllData,
     }
   }, [data, initial.persistenceUnavailable])
 

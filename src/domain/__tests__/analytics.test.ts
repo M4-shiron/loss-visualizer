@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import type { Decision, ValueItem } from '../../types/domain'
-import { categoryBreakdown, savingsByMonth, valueItemProgress } from '../analytics'
+import {
+  categoryBreakdown,
+  monthKeyOf,
+  previousMonthSavings,
+  previousWeekSavings,
+  savingsByMonth,
+  startOfWeek,
+  valueItemProgress,
+  weekKey,
+} from '../analytics'
 
 function makeDecision(overrides: Partial<Decision>): Decision {
   return {
@@ -141,5 +150,103 @@ describe('価値尺度への到達度（valueItemProgress）', () => {
     )
     expect(result.find((r) => r.item.id === 'v1')?.multiplier).toBe(0.5)
     expect(result.find((r) => r.item.id === 'v2')?.multiplier).toBe(2)
+  })
+})
+
+describe('週の開始日（startOfWeek, weekKey）', () => {
+  it('週の開始日は常に月曜日になる', () => {
+    for (let offset = 0; offset < 14; offset++) {
+      const date = new Date(2026, 7, 1 + offset)
+      expect(startOfWeek(date).getDay()).toBe(1)
+    }
+  })
+
+  it('同じ週内の日付はすべて同じweekKeyになる', () => {
+    const base = new Date(2026, 7, 26)
+    const start = startOfWeek(base)
+    for (let offset = 0; offset < 7; offset++) {
+      const date = new Date(start.getFullYear(), start.getMonth(), start.getDate() + offset)
+      expect(weekKey(date)).toBe(weekKey(base))
+    }
+  })
+
+  it('週をまたぐとweekKeyが変わる', () => {
+    const base = new Date(2026, 7, 26)
+    const start = startOfWeek(base)
+    const nextWeek = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 7)
+    expect(weekKey(nextWeek)).not.toBe(weekKey(base))
+  })
+})
+
+describe('monthKeyOf', () => {
+  it('YYYY-MM形式（月は2桁）で返す', () => {
+    expect(monthKeyOf(new Date(2026, 0, 15))).toBe('2026-01')
+    expect(monthKeyOf(new Date(2026, 10, 1))).toBe('2026-11')
+  })
+})
+
+describe('先週の確定節約額（previousWeekSavings）', () => {
+  it('今週分は含めず、先週分だけを合計する', () => {
+    const now = new Date(2026, 7, 26)
+    const thisWeekStart = startOfWeek(now)
+    const decisions: Decision[] = [
+      makeDecision({ id: 'd1', amount: 300, outcome: 'skipped', createdAt: thisWeekStart.toISOString() }),
+      makeDecision({
+        id: 'd2',
+        amount: 500,
+        outcome: 'skipped',
+        createdAt: new Date(
+          thisWeekStart.getFullYear(),
+          thisWeekStart.getMonth(),
+          thisWeekStart.getDate() - 3,
+        ).toISOString(),
+      }),
+      makeDecision({
+        id: 'd3',
+        amount: 700,
+        outcome: 'skipped',
+        createdAt: new Date(
+          thisWeekStart.getFullYear(),
+          thisWeekStart.getMonth(),
+          thisWeekStart.getDate() - 8,
+        ).toISOString(),
+      }),
+    ]
+    expect(previousWeekSavings(decisions, now)).toBe(500)
+  })
+
+  it('「買う」「保留」は含めない', () => {
+    const now = new Date(2026, 7, 26)
+    const thisWeekStart = startOfWeek(now)
+    const lastWeekDate = new Date(
+      thisWeekStart.getFullYear(),
+      thisWeekStart.getMonth(),
+      thisWeekStart.getDate() - 2,
+    )
+    const decisions: Decision[] = [
+      makeDecision({ id: 'd1', amount: 300, outcome: 'purchased', createdAt: lastWeekDate.toISOString() }),
+      makeDecision({ id: 'd2', amount: 400, outcome: 'pending', createdAt: lastWeekDate.toISOString() }),
+    ]
+    expect(previousWeekSavings(decisions, now)).toBe(0)
+  })
+})
+
+describe('先月の確定節約額（previousMonthSavings）', () => {
+  it('今月分は含めず、先月分だけを合計する', () => {
+    const now = new Date(2026, 7, 15)
+    const decisions: Decision[] = [
+      makeDecision({ id: 'd1', amount: 300, outcome: 'skipped', createdAt: '2026-08-01T00:00:00.000Z' }),
+      makeDecision({ id: 'd2', amount: 500, outcome: 'skipped', createdAt: '2026-07-15T00:00:00.000Z' }),
+      makeDecision({ id: 'd3', amount: 700, outcome: 'skipped', createdAt: '2026-06-15T00:00:00.000Z' }),
+    ]
+    expect(previousMonthSavings(decisions, now)).toBe(500)
+  })
+
+  it('年をまたぐ場合も正しく先月を計算する', () => {
+    const now = new Date(2026, 0, 10)
+    const decisions: Decision[] = [
+      makeDecision({ id: 'd1', amount: 900, outcome: 'skipped', createdAt: '2025-12-20T00:00:00.000Z' }),
+    ]
+    expect(previousMonthSavings(decisions, now)).toBe(900)
   })
 })

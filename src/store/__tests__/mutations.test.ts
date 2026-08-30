@@ -1,18 +1,23 @@
 import { describe, expect, it } from 'vitest'
 import { totalConfirmedSavings } from '../../domain/decisions'
 import { createEmptyData } from '../../storage/schema'
-import type { Decision, Goal, ValueItem } from '../../types/domain'
+import type { CategoryId, Decision, Goal, ValueItem } from '../../types/domain'
 import {
   addGoal,
   addValueItem,
   archiveExpiredPendingDecisions,
+  dismissMonthlySummary,
+  dismissWeeklySummary,
   removeDecision,
   removeGoal,
   removeValueItem,
+  resetAllData,
   resolvePending,
   setPriorityGoal,
+  toggleCategoryVisibility,
   updateDecision,
   updateGoal,
+  updateNotificationSettings,
   updateValueItem,
 } from '../mutations'
 
@@ -319,5 +324,67 @@ describe('優先目標の切り替え', () => {
     const next = setPriorityGoal(data, 'g1')
     const priorityCount = next.goals.filter((g) => g.isPriority).length
     expect(priorityCount).toBe(1)
+  })
+})
+
+describe('通知設定の更新（updateNotificationSettings）', () => {
+  it('指定した項目だけを更新し、他は変えない', () => {
+    const next = updateNotificationSettings(createEmptyData(), { weeklySummary: true })
+    expect(next.settings.notifications).toEqual({
+      pendingReminder: true,
+      weeklySummary: true,
+      monthlySummary: false,
+    })
+  })
+})
+
+describe('カテゴリの表示・非表示（toggleCategoryVisibility）', () => {
+  const ALL: CategoryId[] = ['convenience', 'hobby', 'other']
+
+  it('表示中のカテゴリを非表示にできる', () => {
+    const next = toggleCategoryVisibility(createEmptyData(), 'convenience', ALL)
+    expect(next.settings.hiddenCategoryIds).toEqual(['convenience'])
+  })
+
+  it('非表示中のカテゴリを表示に戻せる', () => {
+    const data = {
+      ...createEmptyData(),
+      settings: {
+        ...createEmptyData().settings,
+        hiddenCategoryIds: ['convenience', 'hobby'] as CategoryId[],
+      },
+    }
+    const next = toggleCategoryVisibility(data, 'convenience', ALL)
+    expect(next.settings.hiddenCategoryIds).toEqual(['hobby'])
+  })
+
+  it('最後の1つを非表示にしようとした場合は変更しない', () => {
+    const data = {
+      ...createEmptyData(),
+      settings: {
+        ...createEmptyData().settings,
+        hiddenCategoryIds: ['convenience', 'hobby'] as CategoryId[],
+      },
+    }
+    const next = toggleCategoryVisibility(data, 'other', ALL)
+    expect(next.settings.hiddenCategoryIds).toEqual(['convenience', 'hobby'])
+  })
+})
+
+describe('週次・月次まとめを閉じる', () => {
+  it('dismissWeeklySummaryは対象週のキーを記録する', () => {
+    const next = dismissWeeklySummary(createEmptyData(), '2026-08-24')
+    expect(next.settings.lastDismissedWeeklySummaryWeek).toBe('2026-08-24')
+  })
+
+  it('dismissMonthlySummaryは対象月のキーを記録する', () => {
+    const next = dismissMonthlySummary(createEmptyData(), '2026-08')
+    expect(next.settings.lastDismissedMonthlySummaryMonth).toBe('2026-08')
+  })
+})
+
+describe('全データのリセット（resetAllData）', () => {
+  it('初期状態を返す', () => {
+    expect(resetAllData()).toEqual(createEmptyData())
   })
 })

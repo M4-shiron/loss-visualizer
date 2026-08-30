@@ -77,8 +77,20 @@ export type NotificationSettings = {
   monthlySummary: boolean
 }
 
-/** アプリ全体の設定（§17, §19）。 */
+/**
+ * アプリ全体の設定（§17, §19）。
+ *
+ * `hiddenCategoryIds` 以降はすべて任意項目にする。第8ループより前に作られた
+ * 保存データにはこれらが存在しないため、必須にすると「壊れたデータ」として
+ * 弾かれ、初期状態にフォールバックしてしまう（記録が消えたように見える）。
+ */
 export type Settings = {
   onboardingCompleted: boolean
   notifications: NotificationSettings
+  /** 購入判断の選択肢から外したカテゴリ。過去の履歴には影響しない（§19）。 */
+  hiddenCategoryIds?: CategoryId[]
+  /** 直近で閉じた週次まとめの対象週（月曜始まり、YYYY-MM-DD）。 */
+  lastDismissedWeeklySummaryWeek?: string
+  /** 直近で閉じた月次まとめの対象月（YYYY-MM）。 */
+  lastDismissedMonthlySummaryMonth?: string
 }
