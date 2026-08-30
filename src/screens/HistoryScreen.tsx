@@ -21,7 +21,9 @@ export function HistoryScreen() {
           id="history-tab-records"
           role="tab"
           aria-selected={tab === 'records'}
-          aria-controls="history-panel-records"
+          // 選択中のパネルしか描画しないため、非選択側にaria-controlsを付けると
+          // 存在しないid を指してしまう。選択中のときだけ関連付ける。
+          aria-controls={tab === 'records' ? 'history-panel-records' : undefined}
           onClick={() => setTab('records')}
           className={`min-h-9 flex-1 rounded-lg text-sm font-bold ${
             tab === 'records' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
@@ -34,7 +36,7 @@ export function HistoryScreen() {
           id="history-tab-insights"
           role="tab"
           aria-selected={tab === 'insights'}
-          aria-controls="history-panel-insights"
+          aria-controls={tab === 'insights' ? 'history-panel-insights' : undefined}
           onClick={() => setTab('insights')}
           className={`min-h-9 flex-1 rounded-lg text-sm font-bold ${
             tab === 'insights' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'

@@ -165,3 +165,54 @@ describe('履歴画面', () => {
     expect(data.achievements).toEqual([])
   })
 })
+
+describe('履歴画面: 展開行のキーボード操作', () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+  })
+  afterEach(() => cleanup())
+
+  /**
+   * 行全体が role="button" の展開トグルになっているため、内側の「編集」「削除」上で
+   * Enter / Space を押すと、keydown が外側までバブルして行が閉じてしまっていた。
+   * さらに外側が preventDefault を呼ぶことで、ボタン本来のクリック生成も打ち消され、
+   * キーボードからは編集も削除も実行できない状態だった（第10ループのレビュー指摘）。
+   */
+  it('「編集」上でEnterを押しても行が閉じない', () => {
+    seedCompletedOnboarding({ decisions: [makeDecision({ id: 'd1', itemName: 'テスト' })] })
+    renderHistory()
+
+    fireEvent.click(screen.getByText('テスト'))
+    const editButton = screen.getByRole('button', { name: '編集' })
+
+    fireEvent.keyDown(editButton, { key: 'Enter', bubbles: true })
+
+    expect(screen.getByRole('button', { name: '編集' })).toBeInTheDocument()
+  })
+
+  it('「削除」上でSpaceを押しても行が閉じない', () => {
+    seedCompletedOnboarding({ decisions: [makeDecision({ id: 'd1', itemName: 'テスト' })] })
+    renderHistory()
+
+    fireEvent.click(screen.getByText('テスト'))
+    const deleteButton = screen.getByRole('button', { name: '削除' })
+
+    fireEvent.keyDown(deleteButton, { key: ' ', bubbles: true })
+
+    expect(screen.getByRole('button', { name: '削除' })).toBeInTheDocument()
+  })
+
+  it('行そのものの上でEnterを押したときは、これまでどおり開閉できる', () => {
+    seedCompletedOnboarding({ decisions: [makeDecision({ id: 'd1', itemName: 'テスト' })] })
+    renderHistory()
+
+    const row = screen.getByText('テスト').closest('[role="button"]')
+    if (!row) throw new Error('行が見つかりません')
+
+    fireEvent.keyDown(row, { key: 'Enter' })
+    expect(screen.getByRole('button', { name: '編集' })).toBeInTheDocument()
+
+    fireEvent.keyDown(row, { key: 'Enter' })
+    expect(screen.queryByRole('button', { name: '編集' })).not.toBeInTheDocument()
+  })
+})

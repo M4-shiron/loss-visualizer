@@ -14,6 +14,7 @@
 - [seed/general_comparisons.json](./seed/general_comparisons.json)：一般比較データ
 - [seed/prompts.json](./seed/prompts.json)：カテゴリ別の問いかけ文
 - [docs/loop-log.md](./docs/loop-log.md)：開発ループの記録
+- [docs/deploy.md](./docs/deploy.md)：Vercelへのデプロイ手順と公開後の確認事項
 
 ## 目的
 
@@ -119,4 +120,7 @@
 - 現時点で5案の中の最優先候補。
 - 共有チャットで確定した実装指示を`PRODUCT_SPEC.md`、開始手順を`START_HERE.md`に整理済み。
 - 比較データとカテゴリ別の問いかけ文を`seed/`に準備済み。
-- まずWeb版MVPをWindows上で完成させ、実際の利用感を検証する段階。将来、必要であればiPhoneアプリ化する。
+- **Web版MVPの実装が完了した（第1〜10ループ）。** `PRODUCT_SPEC.md`§24の完成条件を、本番ビルド上の通し確認で満たしていることを確認済み。
+- 公開準備（Vercel向けのSPA設定）まで完了。**実際の公開はまだ行っていない。** 手順は`docs/deploy.md`を参照。
+- 未確認の環境：Edge、Firefox、iOS Safari、実機iPhone。開発環境ではChromeしか操作できないため、公開前後にユーザー側での確認が必要。
+- 次の段階は、実際にスマートフォンで使ってみて利用価値を検証すること。iPhoneアプリ化はその後に判断する。

@@ -96,8 +96,28 @@ export function DecideScreen() {
     }
   }
 
+  /**
+   * 判断結果の読み上げ用テキスト。
+   *
+   * ライブリージョンは「先に存在していて、あとから中身が変わる」ときに読み上げられる。
+   * 中身ごと新しく挿入された領域は読み上げられないため、この領域は常に描画しておき、
+   * 結果が出た時点でテキストだけを差し込む。
+   */
+  const resultAnnouncement =
+    step === 'result' && result
+      ? result.decision.outcome === 'skipped'
+        ? `守れました。${formatYen(amount)}。ナイス判断です。`
+        : result.decision.outcome === 'purchased'
+          ? `記録しました。${formatYen(amount)}。`
+          : `保留にしました。${formatYen(amount)}。24時間後に、もう一度確認します。`
+      : ''
+
   return (
     <div className="flex min-h-dvh flex-col">
+      <div role="status" aria-live="polite" className="sr-only">
+        {resultAnnouncement}
+      </div>
+
       <header className="flex items-center gap-3 px-4 pt-6 pb-4">
         {step !== 'result' ? (
           <button
@@ -381,7 +401,7 @@ function ResultStep({
   const reasonLabel = purchaseReasonLabel(purchaseReason)
 
   return (
-    <div className="space-y-5" role="status" aria-live="polite">
+    <div className="space-y-5">
       {outcome === 'skipped' ? (
         <div className="animate-pop-in rounded-2xl bg-emerald-50 p-6 text-center">
           <p className="text-sm font-semibold text-emerald-700">守れました</p>

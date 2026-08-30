@@ -164,6 +164,10 @@ export function RecordsTab() {
                           setExpandedId((current) => (current === decision.id ? null : decision.id))
                         }
                         onKeyDown={(e) => {
+                          // 内側の「編集」「削除」上でのキー操作は、そのボタン自身に任せる。
+                          // ここで拾ってpreventDefaultすると、ボタン本来のクリック生成まで
+                          // 打ち消してしまい、キーボードから編集・削除ができなくなる。
+                          if (e.target !== e.currentTarget) return
                           if (e.key === 'Enter' || e.key === ' ') {
                             e.preventDefault()
                             setExpandedId((current) => (current === decision.id ? null : decision.id))

@@ -36,18 +36,31 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     const now = new Date()
     if (loaded.data.decisions.some((d) => shouldArchive(d, now))) {
       const archivedData = mutations.archiveExpiredPendingDecisions(loaded.data, now)
-      repository.save(archivedData)
-      return { ...loaded, data: archivedData }
+      const saved = repository.save(archivedData)
+      return {
+        ...loaded,
+        data: archivedData,
+        persistenceUnavailable: loaded.persistenceUnavailable || !saved,
+      }
     }
     return loaded
   })
   const [data, setData] = useState<StoredData>(initial.data)
+  /**
+   * 読み込みは成功したのに、書き込みだけが失敗する環境がある
+   * （Safariのプライベートブラウジング、容量超過など）。
+   * この場合こそ「保存できません」と伝える必要があるため、保存の失敗を記録する。
+   */
+  const [saveFailed, setSaveFailed] = useState(false)
 
   const value = useMemo<AppStateContextValue>(() => {
     function applyAndSave(mutate: (prev: StoredData) => StoredData): void {
       setData((prev) => {
         const nextData = mutate(prev)
-        repository.save(nextData)
+        if (!repository.save(nextData)) {
+          // 更新関数の中で直接setStateせず、次のタスクへ逃がす（更新関数は純粋に保つ）。
+          queueMicrotask(() => setSaveFailed(true))
+        }
         return nextData
       })
     }
@@ -196,7 +209,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
     return {
       data,
-      persistenceUnavailable: initial.persistenceUnavailable,
+      // 起動時に読めなかった場合と、あとから書き込みに失敗した場合の両方を含める。
+      persistenceUnavailable: initial.persistenceUnavailable || saveFailed,
       recoveredFromCorruption: initial.recoveredFromCorruption,
       recordDecision,
       resolvePending,
@@ -217,7 +231,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       dismissMonthlySummary,
       resetAllData,
     }
-  }, [data, initial.persistenceUnavailable, initial.recoveredFromCorruption])
+  }, [data, initial.persistenceUnavailable, initial.recoveredFromCorruption, saveFailed])
 
   return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>
 }
