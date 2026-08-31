@@ -281,4 +281,65 @@ describe('buildIntervention', () => {
       expect(variants.size).toBeGreaterThan(1)
     })
   })
+
+  describe('労働時間換算との組み合わせ（改善方針3）', () => {
+    it('時給未登録なら、価値尺度の候補は労働時間に触れない', () => {
+      const result = buildIntervention(
+        input({ valueItems: [valueItem('モニター', 20000)] }),
+        pickFirst,
+      )
+      expect(result?.text).not.toContain('働いた分')
+    })
+
+    it('価値尺度と時給が両方あれば、労働時間と組み合わせた文言になる', () => {
+      const result = buildIntervention(
+        input({ amount: 3000, valueItems: [valueItem('モニター', 20000)], hourlyWage: 1200 }),
+        pickFirst,
+      )
+      expect(result?.kind).toBe('valueItemSwap')
+      expect(result?.text).toBe('この3,000円は約2時間30分働いた分。モニターに回した方が満足しない？')
+    })
+
+    it('節約目標と時給が両方あれば、労働時間と組み合わせた文言になる', () => {
+      const result = buildIntervention(
+        input({ amount: 3000, goals: [goal('旅行', 50000)], hourlyWage: 1200 }),
+        pickFirst,
+      )
+      expect(result?.kind).toBe('goalSwap')
+      expect(result?.text).toBe('この3,000円は約2時間30分働いた分。旅行に回した方が近づかない？')
+    })
+
+    it('価値尺度・節約目標がどちらもなく時給だけあれば、労働時間単独の候補を使う', () => {
+      const result = buildIntervention(input({ amount: 3000, hourlyWage: 1200 }), pickFirst)
+      expect(result?.kind).toBe('laborTime')
+      expect(result?.text).toContain('約2時間30分')
+    })
+
+    it('価値尺度・節約目標・時給のすべてがなければ、労働時間単独の候補も出さない', () => {
+      const result = buildIntervention(input({ amount: 3000 }))
+      expect(result).toBeUndefined()
+    })
+
+    it('優先順位は 価値尺度 → 節約目標 → 労働時間単独 → 履歴 のまま', () => {
+      const result = buildIntervention(
+        input({
+          amount: 3000,
+          hourlyWage: 1200,
+          decisions: [decision(), decision()],
+        }),
+        pickFirst,
+      )
+      // 価値尺度・節約目標が無いので、履歴より優先度の高い労働時間単独が選ばれる。
+      expect(result?.kind).toBe('laborTime')
+    })
+
+    it('丸めると5分未満になる金額では、労働時間には触れない', () => {
+      // 10円 ÷ 1,200円/時 × 60 = 0.5分 → 5分単位で丸めると0分
+      const result = buildIntervention(
+        input({ amount: 10, valueItems: [valueItem('モニター', 20000)], hourlyWage: 1200 }),
+        pickFirst,
+      )
+      expect(result?.text).not.toContain('働いた分')
+    })
+  })
 })

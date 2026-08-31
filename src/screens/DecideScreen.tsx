@@ -62,6 +62,7 @@ export function DecideScreen() {
       goals: data.goals,
       decisions: data.decisions,
       now: new Date(),
+      hourlyWage: data.settings.hourlyWage,
     })
     setPrompt(intervention?.text ?? pickRandomPrompt(categoryId))
     setComparisonCards(
@@ -70,6 +71,7 @@ export function DecideScreen() {
         valueItems: data.valueItems,
         goals: data.goals,
         totalSavings: beforeTotal,
+        hourlyWage: data.settings.hourlyWage,
       }),
     )
     setStep('judge')

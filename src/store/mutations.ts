@@ -142,6 +142,11 @@ export function archiveExpiredPendingDecisions(prev: StoredData, now: Date): Sto
   return { ...prev, decisions: archiveExpiredPending(prev.decisions, now) }
 }
 
+/** 概算の時給を登録・変更・削除する（改善方針3）。`undefined`で未登録に戻す。 */
+export function updateHourlyWage(prev: StoredData, hourlyWage: number | undefined): StoredData {
+  return { ...prev, settings: { ...prev.settings, hourlyWage } }
+}
+
 export function updateNotificationSettings(
   prev: StoredData,
   update: Partial<NotificationSettings>,

@@ -17,6 +17,7 @@ import {
   toggleCategoryVisibility,
   updateDecision,
   updateGoal,
+  updateHourlyWage,
   updateNotificationSettings,
   updateValueItem,
 } from '../mutations'
@@ -333,6 +334,29 @@ describe('通知設定の更新（updateNotificationSettings）', () => {
     expect(next.settings.notifications).toEqual({
       pendingReminder: true,
       weeklySummary: true,
+      monthlySummary: false,
+    })
+  })
+})
+
+describe('時給の更新（updateHourlyWage）', () => {
+  it('時給を登録する', () => {
+    const next = updateHourlyWage(createEmptyData(), 1200)
+    expect(next.settings.hourlyWage).toBe(1200)
+  })
+
+  it('undefinedを渡すと未登録に戻る', () => {
+    const withWage = updateHourlyWage(createEmptyData(), 1200)
+    const next = updateHourlyWage(withWage, undefined)
+    expect(next.settings.hourlyWage).toBeUndefined()
+  })
+
+  it('他の設定項目は変えない', () => {
+    const next = updateHourlyWage(createEmptyData(), 1200)
+    expect(next.settings.onboardingCompleted).toBe(false)
+    expect(next.settings.notifications).toEqual({
+      pendingReminder: true,
+      weeklySummary: false,
       monthlySummary: false,
     })
   })

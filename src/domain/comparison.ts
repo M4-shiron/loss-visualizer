@@ -4,6 +4,7 @@ import type { Goal, ValueItem } from '../types/domain'
 import type { ComparisonCard } from './comparisonCard'
 import { formatYen } from './format'
 import { goalProgressPercent } from './goals'
+import { formatLaborTime, laborMinutesForAmount } from './laborTime'
 
 /** 損失の可視化に表示する比較カードの上限（§9・購入直前の画面のため情報過多を避ける）。 */
 const MAX_CARDS = 3
@@ -69,6 +70,19 @@ function buildGoalCard(goal: Goal, totalSavings: number, amount: number): Compar
   }
 }
 
+/** 労働時間換算カードを組み立てる（改善方針3）。時給が未登録・丸めが5分未満なら`undefined`。 */
+function buildLaborTimeCard(amount: number, hourlyWage: number): ComparisonCard | undefined {
+  const minutes = laborMinutesForAmount(amount, hourlyWage)
+  // 丸めた結果が0分（5分未満）のときは「5分未満働いた分」という弱い文言を出さない。
+  if (minutes === undefined || minutes <= 0) return undefined
+
+  return {
+    kind: 'laborTime',
+    title: '働いた時間',
+    text: `${formatLaborTime(minutes)}働いた分`,
+  }
+}
+
 /** 一般比較の候補を、比率がもっとも1に近い順に並べる（§8）。 */
 function rankGeneralComparisons(amount: number): GeneralComparison[] {
   return [...GENERAL_COMPARISONS].sort((a, b) => {
@@ -121,16 +135,19 @@ export type ComparisonInput = {
   goals: Goal[]
   /** 優先目標の進捗計算に使う、現在までの総累計節約額。 */
   totalSavings: number
+  /** 概算の時給（円）。未登録なら労働時間換算カードは出さない（改善方針3）。 */
+  hourlyWage?: number
 }
 
 /**
- * 損失の可視化カードを組み立てる（§7）。
- * 優先順位: ①価値尺度 ②節約目標 ③一般比較。
+ * 損失の可視化カードを組み立てる（§7、改善方針3）。
+ * 優先順位: ①価値尺度 ②節約目標 ③労働時間換算 ④一般比較。
  * 合計は最大{@link MAX_CARDS}枚（購入直前の画面のため情報過多を避ける）。
+ * 上位が枠を埋めた場合、労働時間換算・一般比較は表示されないことがある。
  * 一般比較のみは仕様上の上限（{@link MAX_GENERAL_CARDS}枚）を別途守る。
  */
 export function buildComparisonCards(input: ComparisonInput): ComparisonCard[] {
-  const { amount, valueItems, goals, totalSavings } = input
+  const { amount, valueItems, goals, totalSavings, hourlyWage } = input
   const cards: ComparisonCard[] = []
 
   const valueItem = pickValueItemForAmount(valueItems, amount)
@@ -139,6 +156,11 @@ export function buildComparisonCards(input: ComparisonInput): ComparisonCard[] {
   const priorityGoal = goals.find((g) => g.isPriority)
   if (priorityGoal && cards.length < MAX_CARDS) {
     cards.push(buildGoalCard(priorityGoal, totalSavings, amount))
+  }
+
+  if (hourlyWage !== undefined && cards.length < MAX_CARDS) {
+    const laborTimeCard = buildLaborTimeCard(amount, hourlyWage)
+    if (laborTimeCard) cards.push(laborTimeCard)
   }
 
   const remainingSlots = Math.min(MAX_GENERAL_CARDS, MAX_CARDS - cards.length)

@@ -93,4 +93,9 @@ export type Settings = {
   lastDismissedWeeklySummaryWeek?: string
   /** 直近で閉じた月次まとめの対象月（YYYY-MM）。 */
   lastDismissedMonthlySummaryMonth?: string
+  /**
+   * 概算の時給（円）。第14ループで追加した任意項目。労働時間換算（改善方針3）に使う。
+   * 未登録（undefined）のときは労働時間換算を一切表示しない。厳密な手取り計算はしない。
+   */
+  hourlyWage?: number
 }

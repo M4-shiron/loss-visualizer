@@ -180,3 +180,64 @@ describe('設定画面: 全データのリセット', () => {
     expect(data.decisions).toHaveLength(1)
   })
 })
+
+describe('設定画面: 時給の目安（改善方針3）', () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+  })
+  afterEach(() => cleanup())
+
+  it('未登録のときは登録ボタンが表示される', () => {
+    seedCompletedOnboarding()
+    renderSettings()
+
+    const section = within(screen.getByRole('region', { name: '時給の目安' }))
+    expect(section.getByRole('button', { name: '＋時給を登録する' })).toBeInTheDocument()
+  })
+
+  it('登録すると保存され、再読み込み後も保持される', () => {
+    seedCompletedOnboarding()
+    renderSettings()
+
+    const section = within(screen.getByRole('region', { name: '時給の目安' }))
+    fireEvent.click(section.getByRole('button', { name: '＋時給を登録する' }))
+    fireEvent.change(section.getByLabelText('時給の目安'), { target: { value: '1200' } })
+    fireEvent.click(section.getByRole('button', { name: '保存する' }))
+
+    expect(section.getByText('1,200円 / 時間')).toBeInTheDocument()
+    let data = readStoredData()
+    expect(data.settings.hourlyWage).toBe(1200)
+
+    cleanup()
+    renderSettings()
+    const reloaded = within(screen.getByRole('region', { name: '時給の目安' }))
+    expect(reloaded.getByText('1,200円 / 時間')).toBeInTheDocument()
+  })
+
+  it('削除すると未登録に戻る', () => {
+    seedCompletedOnboarding({
+      settings: {
+        onboardingCompleted: true,
+        notifications: { pendingReminder: true, weeklySummary: false, monthlySummary: false },
+        hourlyWage: 1200,
+      },
+    })
+    renderSettings()
+
+    const section = within(screen.getByRole('region', { name: '時給の目安' }))
+    fireEvent.click(section.getByRole('button', { name: '削除' }))
+
+    expect(section.getByRole('button', { name: '＋時給を登録する' })).toBeInTheDocument()
+    const data = readStoredData()
+    expect(data.settings.hourlyWage).toBeUndefined()
+  })
+
+  it('未入力のままでは保存できない', () => {
+    seedCompletedOnboarding()
+    renderSettings()
+
+    const section = within(screen.getByRole('region', { name: '時給の目安' }))
+    fireEvent.click(section.getByRole('button', { name: '＋時給を登録する' }))
+    expect(section.getByRole('button', { name: '保存する' })).toBeDisabled()
+  })
+})

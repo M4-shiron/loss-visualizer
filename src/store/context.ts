@@ -81,6 +81,8 @@ export type AppStateContextValue = {
 
   /** 保留リマインダー・週次まとめ・月次まとめの表示可否を切り替える（アプリ内表示。OS通知は使わない）。 */
   updateNotificationSettings: (input: Partial<NotificationSettings>) => void
+  /** 概算の時給（円）を登録・変更する。`undefined`を渡すと未登録に戻す（改善方針3）。 */
+  updateHourlyWage: (hourlyWage: number | undefined) => void
   /** カテゴリの表示・非表示を切り替える。表示が0件になる変更は無視される。 */
   toggleCategoryVisibility: (categoryId: CategoryId) => void
   /** 今週の週次まとめを閉じる。同じ週の間は再表示しない。 */

@@ -191,6 +191,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       applyAndSave((prev) => mutations.updateNotificationSettings(prev, input))
     }
 
+    const updateHourlyWage = (hourlyWage: number | undefined): void => {
+      applyAndSave((prev) => mutations.updateHourlyWage(prev, hourlyWage))
+    }
+
     const toggleCategoryVisibility = (categoryId: CategoryId): void => {
       applyAndSave((prev) => mutations.toggleCategoryVisibility(prev, categoryId, ALL_CATEGORY_IDS))
     }
@@ -226,6 +230,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       completeOnboarding,
       archiveExpiredPending,
       updateNotificationSettings,
+      updateHourlyWage,
       toggleCategoryVisibility,
       dismissWeeklySummary,
       dismissMonthlySummary,

@@ -1,6 +1,6 @@
 /** 損失の可視化に使う比較カード（§7, §9）。 */
 
-export type ComparisonCardKind = 'valueItem' | 'goal' | 'general'
+export type ComparisonCardKind = 'valueItem' | 'goal' | 'laborTime' | 'general'
 
 export type ComparisonCard = {
   kind: ComparisonCardKind
@@ -10,6 +10,9 @@ export type ComparisonCard = {
   text: string
   /** 補足の一言。例：「あと4回見送れば焼肉に届きます」 */
   subtext?: string
-  /** ミニゲージ用の0〜100。 */
-  progressPercent: number
+  /**
+   * ミニゲージ用の0〜100。労働時間換算（改善方針3）のように、
+   * 目標に対する割合という概念そのものがない種別では省略する（その場合ゲージは表示しない）。
+   */
+  progressPercent?: number
 }

@@ -321,3 +321,56 @@ describe('感情設計（改善方針2：揺さぶり画面と報酬画面）', 
     expect(screen.getByText('0% → 10%')).toBeInTheDocument()
   })
 })
+
+describe('労働時間換算（改善方針3）', () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+  })
+  afterEach(() => cleanup())
+
+  it('時給が未登録なら、労働時間換算カードは表示されない', () => {
+    seedCompletedOnboarding()
+    renderDecideScreen()
+    fillInputAndProceed('3000')
+
+    expect(screen.queryByText('労働時間換算')).not.toBeInTheDocument()
+  })
+
+  it('時給を登録していると、比較カードに労働時間換算が表示される', () => {
+    seedCompletedOnboarding({
+      settings: {
+        onboardingCompleted: true,
+        notifications: { pendingReminder: true, weeklySummary: false, monthlySummary: false },
+        hourlyWage: 1200,
+      },
+    })
+    renderDecideScreen()
+    fillInputAndProceed('3000')
+
+    expect(screen.getByText('労働時間換算')).toBeInTheDocument()
+    expect(screen.getByText('約2時間30分働いた分')).toBeInTheDocument()
+  })
+
+  it('価値尺度と時給が両方あると、パーソナライズ文が労働時間と組み合わさる', () => {
+    seedCompletedOnboarding({
+      valueItems: [
+        { id: 'v1', name: 'モニター', price: 20000, createdAt: '2026-08-01T00:00:00.000Z' },
+      ],
+      settings: {
+        onboardingCompleted: true,
+        notifications: { pendingReminder: true, weeklySummary: false, monthlySummary: false },
+        hourlyWage: 1200,
+      },
+    })
+    // 候補はランダムに選ばれる（reachCount候補は労働時間に触れない）ため、
+    // 労働時間と組み合わさった候補が確実に選ばれるよう固定する。
+    const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0)
+    renderDecideScreen()
+    fillInputAndProceed('3000')
+    randomSpy.mockRestore()
+
+    expect(
+      screen.getByText('この3,000円は約2時間30分働いた分。モニターに回した方が満足しない？'),
+    ).toBeInTheDocument()
+  })
+})

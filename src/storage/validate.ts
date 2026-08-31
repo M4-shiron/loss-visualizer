@@ -130,6 +130,15 @@ function isSettings(value: unknown): value is Settings {
   ) {
     return false
   }
+  if (value.hourlyWage !== undefined) {
+    if (
+      typeof value.hourlyWage !== 'number' ||
+      !Number.isFinite(value.hourlyWage) ||
+      value.hourlyWage <= 0
+    ) {
+      return false
+    }
+  }
   return true
 }
 

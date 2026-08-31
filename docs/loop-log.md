@@ -870,3 +870,49 @@ Chromeで実際に操作して確認：揺さぶり画面の暗いヒーロー�
 - `prefers-reduced-motion`環境での実機確認は未実施（テストでは検証済み）
 - 実機・他ブラウザでの表示は未確認（従来どおり）
 - `/code-review`は未実施。新ルールではこの規模のLoopに必須ではない
+
+---
+
+## Loop 14: Labor Time Comparison（2026-08-31）
+
+改善フェーズの3件目（`docs/improvement-plan.md` 改善方針3）。
+
+### 実装内容
+
+- `Settings`型に`hourlyWage?: number`を追加（任意項目。`hiddenCategoryIds`と同じパターンで、`schemaVersion`は上げず移行処理も不要）。`validate.ts`にも対応する検証を追加
+- `src/domain/laborTime.ts`（新規）：金額÷時給×60分を5分単位に丸める`laborMinutesForAmount`、「約2時間30分」の形式にする`formatLaborTime`
+- `comparisonCard.ts`：`ComparisonCardKind`に`laborTime`を追加。`progressPercent`を任意化し、割合の概念がない種別（労働時間換算）ではミニゲージを表示しないようにした
+- `comparison.ts`：比較カードの優先順位を「価値尺度→節約目標→労働時間換算→一般比較」に拡張。合計上限（3枚）は変更していないため、上位が埋まれば労働時間換算・一般比較は表示されないことがある
+- `intervention.ts`：時給が登録されている場合、価値尺度・節約目標の代替提案（`valueItemSwap`/`goalSwap`の主要な文言）を労働時間と組み合わせた文言に差し替える（例：「この3,000円は約2時間30分働いた分。モニターに回した方が満足しない？」）。どちらも登録されていない場合のみ、労働時間単独の`laborTime`層（節約目標の下・履歴の上）を使う
+- `store/mutations.ts`・`context.ts`・`AppStateContext.tsx`：`updateHourlyWage`を追加
+- `src/screens/settings/HourlyWageSection.tsx`（新規）：時給の登録・編集・削除。未登録時は「＋時給を登録する」のみ表示
+- `DecideScreen.tsx`：`data.settings.hourlyWage`を`buildIntervention`・`buildComparisonCards`の両方へ渡す配線のみ
+
+### 主要な判断
+
+- **「単なる『約2時間30分』で終わらせない」を、候補の置き換えで実現した。** 労働時間換算の文言を独立候補として追加するのではなく、既存の価値尺度・目標の主要な代替提案テキストを条件付きで書き換える形にした。これにより「組み合わせ型を優先する」を、ランダム選択に紛れさせず確実にした
+- **合計カード枚数の上限（3枚）は変えなかった。** 改善方針3の優先順位を反映すると、価値尺度・目標が両方ある場合は労働時間換算も一般比較も出ない場合がある。情報過多を避ける既存方針（PRODUCT_SPEC §9）を優先し、「表示選択は実装側の裁量」という改善方針の記述どおりに判断した
+- **ミニゲージを任意化した。** 労働時間換算には「目標に対する割合」という概念がなく、無理に0〜100の値を割り当てるより「ゲージなし」の方が誠実だと判断した
+- 5分未満に丸まる金額（例：時給1,200円で10円）は「働いた分」に一切触れない設計にした。「5分未満働いた分」という文言は実感として弱く、既存の他の候補（労働時間に触れない文言）へ自然にフォールバックする（この方針は`intervention.ts`では実装時から守れていたが、`comparison.ts`側は下記`/code-review`で漏れが見つかった）
+
+### `/code-review`の結果
+
+コミット前に実行した（実装直後は未実施のまま先の記録を書いたが、コミット前に着手し完了させた）。指摘5件のうち、実装の誤りとして2件を修正し、テストを追加した。1件は既存コードとの整合を検討したうえで見送った。
+
+1. **【要修正・確認済み】`comparison.ts`の`buildLaborTimeCard`が`minutes === undefined`しか見ておらず、`minutes <= 0`（5分未満に丸まる場合）を素通りしていた。** 上の「主要な判断」に書いた方針（5分未満は「働いた分」に触れない）が、比較カード側だけ守れていなかった。`intervention.ts`の同種のガード（`laborTimeText`）は正しく実装されていたため、症状が出るのは購入判断画面の比較カードのみだった。**修正内容：** 一度ガードを外して再現テストが失敗することを確認したうえで`minutes <= 0`のガードを追加し、再度成功することを確認した。回帰テストを`comparison.test.ts`に追加した
+2. **【低・重複】`laborTimeText(input.amount, input.hourlyWage)`が`valueItemCandidates`・`goalCandidates`・`laborTimeOnlyCandidates`の3箇所で毎回計算されていた。** `buildIntervention`側で1回だけ計算し、各関数へ引数として渡す形に整理した
+3. **【検討のうえ見送り】`validate.ts`の`hourlyWage`検証が、`isValidAmount`（整数・上限9,999,999円）ほど厳密でないという指摘。** 確認したところ、同じファイル内の`isValueItem`（`price`）・`isGoal`（`targetAmount`）も、`typeof === 'number' && Number.isFinite`のみで整数・上限・正の値のいずれも検証しておらず、`hourlyWage`の検証（`Number.isFinite && > 0`）は既にこの2つより厳しい。`hourlyWage`だけを`isValidAmount`と同水準まで厳密化すると、同種の3項目の中でこの項目だけ非対称になる。`validate.ts`の役割は「壊れたJSONでアプリがクラッシュしないこと」の保証であり、UI側の入力上限を再現することではないと判断し、既存パターンに合わせて見送った。全3項目をまとめて厳密化するかどうかは、将来必要になれば別途判断する
+4. **【対応済み・テスト追加】`validate.ts`の`hourlyWage`検証に対する直接のユニットテストが無かった。** `src/storage/__tests__/validate.test.ts`を新設し、`validateStoredData`を直接呼ぶ形で7件追加した（有効な正の数値、0、負数、文字列、NaN、Infinityなど）
+
+### テスト結果
+
+26ファイル289件成功（従来249件＋新規40件：`laborTime.test.ts`10件、`comparison.test.ts`6件、`intervention.test.ts`7件、`mutations.test.ts`3件、`SettingsSections.test.tsx`4件、`DecideScreen.test.tsx`3件、`validate.test.ts`7件）/ 型チェック0件 / oxlint 0件 / 本番ビルド成功・警告0件（gzip後 JS 95.39kB、CSS 6.24kB）
+
+Chromeで実際に操作して確認：設定画面での登録・保存・再読み込み後の保持、購入判断画面での労働時間換算カード（ゲージなし・価値尺度と一般比較の間に表示）、パーソナライズ文の組み合わせ表示。コンソールにエラーなし（このブラウザ確認は`/code-review`の指摘より前、バグ修正前に行ったもの。5分未満に丸まる金額では確認していなかったため、当時は見つけられなかった）。
+
+### 未解決事項
+
+- **文言・並び順が実際に自然かはユーザーの判断待ち。** 特に「約2時間30分働いて稼いだ3,000円」という言い回しの強さは、`PRODUCT_SPEC.md`§0の「責めない」方針との兼ね合いで確認が必要
+- `valueItemScale`（金額が価値尺度より高い場合の「◯回分」表現）とhistory候補は、労働時間と組み合わせていない（文字数・複雑さを抑えるため意図的に対象外とした）
+- 実機・他ブラウザでの表示は未確認（従来どおり）
+- `validate.ts`の数値検証（`price`・`targetAmount`・`hourlyWage`）を、UI側の`isValidAmount`と同水準まで揃えるかどうかは未決定のまま残した（上記`/code-review`の指摘3）

@@ -174,4 +174,70 @@ describe('比較カードの組み立て', () => {
       expect(cards.length).toBeGreaterThan(0)
     }
   })
+
+  describe('労働時間換算（改善方針3）', () => {
+    it('時給が未登録なら労働時間換算カードは出さない', () => {
+      const cards = buildComparisonCards({ amount: 800, valueItems: [], goals: [], totalSavings: 0 })
+      expect(cards.some((c) => c.kind === 'laborTime')).toBe(false)
+    })
+
+    it('時給が登録されていれば、価値尺度・目標より下・一般比較より上の優先度で入る', () => {
+      const cards = buildComparisonCards({
+        amount: 800,
+        valueItems: [makeValueItem({})],
+        goals: [makeGoal({})],
+        totalSavings: 10000,
+        hourlyWage: 1200,
+      })
+      expect(cards.map((c) => c.kind)).toEqual(['valueItem', 'goal', 'laborTime'])
+    })
+
+    it('文言は「約◯時間◯分働いた分」の形式になる', () => {
+      const cards = buildComparisonCards({
+        amount: 3000,
+        valueItems: [],
+        goals: [],
+        totalSavings: 0,
+        hourlyWage: 1200,
+      })
+      const laborCard = cards.find((c) => c.kind === 'laborTime')
+      expect(laborCard?.text).toBe('約2時間30分働いた分')
+    })
+
+    it('割合の概念がないため、ミニゲージ用のprogressPercentを持たない', () => {
+      const cards = buildComparisonCards({
+        amount: 3000,
+        valueItems: [],
+        goals: [],
+        totalSavings: 0,
+        hourlyWage: 1200,
+      })
+      const laborCard = cards.find((c) => c.kind === 'laborTime')
+      expect(laborCard?.progressPercent).toBeUndefined()
+    })
+
+    it('価値尺度・目標・労働時間換算で3枚埋まる場合、一般比較は出さない', () => {
+      const cards = buildComparisonCards({
+        amount: 800,
+        valueItems: [makeValueItem({})],
+        goals: [makeGoal({})],
+        totalSavings: 10000,
+        hourlyWage: 1200,
+      })
+      expect(cards.some((c) => c.kind === 'general')).toBe(false)
+      expect(cards.length).toBe(3)
+    })
+
+    it('丸めると5分未満になる金額では、労働時間換算カードを出さない（弱い文言「5分未満働いた分」を避ける）', () => {
+      // 10円 ÷ 1,200円/時 × 60 = 0.5分 → 5分単位で丸めると0分
+      const cards = buildComparisonCards({
+        amount: 10,
+        valueItems: [],
+        goals: [],
+        totalSavings: 0,
+        hourlyWage: 1200,
+      })
+      expect(cards.some((c) => c.kind === 'laborTime')).toBe(false)
+    })
+  })
 })

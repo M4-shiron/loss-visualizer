@@ -5,6 +5,7 @@ import { totalConfirmedSavings } from '../domain/decisions'
 import { ArchiveSection } from './settings/ArchiveSection'
 import { CategorySection } from './settings/CategorySection'
 import { DataResetSection } from './settings/DataResetSection'
+import { HourlyWageSection } from './settings/HourlyWageSection'
 import { NotificationSection } from './settings/NotificationSection'
 import { useAppState } from '../store/useAppState'
 
@@ -34,6 +35,7 @@ export function SettingsScreen() {
           onSetPriority={setPriorityGoal}
         />
 
+        <HourlyWageSection />
         <NotificationSection />
         <CategorySection />
         <ArchiveSection />
