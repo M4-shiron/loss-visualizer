@@ -1,5 +1,9 @@
 # Loss Visualizer MVP 実装仕様書
 
+> **この仕様書はMVPで確定した体験と機能の正本であり、内容は書き換えない。**
+> Web版MVPは2026-08-31に完成・公開済み（https://loss-visualizer.vercel.app ）。
+> 公開後の改善方針・Loop順序は`docs/improvement-plan.md`にある。両者が食い違う場合はそちらを優先する。
+
 ## 現在の実装対象
 
 現在は、スマートフォンでも使いやすいレスポンシブなWeb版MVPを先に完成させる。Web版で利用価値と操作性を検証した後、必要であればiPhoneアプリ化を検討する。
