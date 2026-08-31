@@ -74,3 +74,31 @@ a {
 .animate-pop-in {
   animation: pop-in 420ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+
+/*
+  揺さぶり画面（購入直前の判断ステップ）の入り方。報酬画面のような弾みは付けず、
+  静かに浮かび上がるだけにして、金額とパーソナライズ文へ意識を向ける（改善方針2）。
+*/
+@keyframes judge-in {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-judge-in {
+  animation: judge-in 520ms ease-out;
+}
+
+/* 視差効果を減らす設定では、動きをほぼ無効化する。 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-pop-in,
+  .animate-judge-in {
+    animation-duration: 1ms;
+    animation-iteration-count: 1;
+  }
+}

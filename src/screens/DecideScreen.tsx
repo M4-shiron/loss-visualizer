@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ComparisonCardView } from '../components/ComparisonCardView'
 import { achievementLabel } from '../domain/achievements'
@@ -11,6 +11,7 @@ import { buildIntervention } from '../domain/intervention'
 import { PURCHASE_REASON_OPTIONS, purchaseReasonLabel } from '../domain/purchaseReason'
 import { MAX_AMOUNT_DIGITS } from '../domain/validation'
 import { pickRandomPrompt, visibleCategories, type PromptCategory } from '../data/prompts'
+import { useCountUp } from '../hooks/useCountUp'
 import type { RecordDecisionResult } from '../store/context'
 import { useAppState } from '../store/useAppState'
 import type { CategoryId, Goal, Outcome, PurchaseReason } from '../types/domain'
@@ -123,6 +124,8 @@ export function DecideScreen() {
           : `保留にしました。${formatYen(amount)}。24時間後に、もう一度確認します。`
       : ''
 
+  const hasHero = step === 'judge' || (step === 'result' && result?.decision.outcome === 'skipped')
+
   return (
     <div className="flex min-h-dvh flex-col">
       <div role="status" aria-live="polite" className="sr-only">
@@ -153,8 +156,15 @@ export function DecideScreen() {
         <h1 className="text-xl font-bold tracking-tight text-slate-900">購入判断</h1>
       </header>
 
+      {step === 'judge' ? (
+        <JudgeHero amount={amount} itemName={itemName} prompt={prompt} />
+      ) : null}
+      {step === 'result' && result?.decision.outcome === 'skipped' ? (
+        <RewardHero amount={amount} />
+      ) : null}
+
       <main
-        className={`mx-auto w-full max-w-md flex-1 px-4 ${step === 'judge' ? 'pb-64' : 'pb-10'}`}
+        className={`mx-auto w-full max-w-md flex-1 px-4 ${hasHero ? 'pt-5' : ''} ${step === 'judge' ? 'pb-64' : 'pb-10'}`}
       >
         {step === 'input' ? (
           <InputStep
@@ -170,9 +180,7 @@ export function DecideScreen() {
           />
         ) : null}
 
-        {step === 'judge' ? (
-          <JudgeStep amount={amount} itemName={itemName} prompt={prompt} cards={comparisonCards} />
-        ) : null}
+        {step === 'judge' ? <JudgeStep cards={comparisonCards} /> : null}
 
         {step === 'purchaseReason' ? (
           <PurchaseReasonStep
@@ -320,34 +328,68 @@ function InputStep({
   )
 }
 
-type JudgeStepProps = {
+type JudgeHeroProps = {
   amount: number
   itemName: string
   prompt: string | undefined
+}
+
+/**
+ * 揺さぶり画面（判断直前）のヒーロー部分。金額とパーソナライズ文を主役にする（改善方針2）。
+ * 静かで少し緊張感のあるトーンにするため、報酬画面とは対照的に暗い背景・控えめな入り方にする。
+ * `max-w-md`の外へ全幅で出すため、`<main>`の外（ヘッダー直下）に配置する。
+ */
+function JudgeHero({ amount, itemName, prompt }: JudgeHeroProps) {
+  return (
+    <div className="animate-judge-in bg-slate-900 px-4 py-10 text-center">
+      <div className="mx-auto max-w-md">
+        {itemName ? <p className="text-sm font-medium text-slate-400">{itemName}</p> : null}
+        <p className="mt-1 text-5xl font-extrabold tracking-tight text-white">
+          {formatYen(amount)}
+        </p>
+        {prompt ? (
+          <p className="mx-auto mt-5 max-w-xs text-base font-medium leading-relaxed text-slate-300">
+            {prompt}
+          </p>
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
+type RewardHeroProps = {
+  amount: number
+}
+
+/**
+ * 「やめる」を選んだ直後の報酬画面のヒーロー部分。揺さぶり画面とは対照的に、
+ * 明るく達成感のあるトーンにする（改善方針2）。守った金額はカウントアップで見せる（§15）。
+ */
+function RewardHero({ amount }: RewardHeroProps) {
+  const displayAmount = useCountUp(amount)
+
+  return (
+    <div className="animate-pop-in bg-gradient-to-br from-emerald-500 to-emerald-700 px-4 py-10 text-center text-white">
+      <div className="mx-auto max-w-md">
+        <p className="text-sm font-bold tracking-wide text-emerald-100">守れました</p>
+        <p className="mt-1 text-5xl font-extrabold tracking-tight">{formatYen(displayAmount)}</p>
+        <p className="mt-2 text-sm font-medium text-emerald-50">ナイス判断です。</p>
+      </div>
+    </div>
+  )
+}
+
+type JudgeStepProps = {
   cards: ComparisonCard[]
 }
 
-function JudgeStep({ amount, itemName, prompt, cards }: JudgeStepProps) {
+function JudgeStep({ cards }: JudgeStepProps) {
+  if (cards.length === 0) return null
   return (
-    <div className="space-y-4">
-      <div className="text-center">
-        {itemName ? <p className="text-sm text-slate-500">{itemName}</p> : null}
-        <p className="text-4xl font-extrabold text-slate-900">{formatYen(amount)}</p>
-      </div>
-
-      {prompt ? (
-        <p className="rounded-2xl bg-white px-4 py-3 text-center text-base font-medium text-slate-700 shadow-sm">
-          {prompt}
-        </p>
-      ) : null}
-
-      {cards.length > 0 ? (
-        <div className="space-y-2.5">
-          {cards.map((card) => (
-            <ComparisonCardView key={`${card.kind}-${card.title}`} card={card} />
-          ))}
-        </div>
-      ) : null}
+    <div className="space-y-2.5">
+      {cards.map((card) => (
+        <ComparisonCardView key={`${card.kind}-${card.title}`} card={card} />
+      ))}
     </div>
   )
 }
@@ -411,46 +453,51 @@ function ResultStep({
   const priorityGoal = useMemo(() => findPriorityGoal(goals), [goals])
   const reasonLabel = purchaseReasonLabel(purchaseReason)
 
+  // ゲージを「見送る前」の位置でまず描画し、次のコミットで「見送った後」へ動かす。
+  // 2段階に分けることでCSSのtransitionが働き、ゲージが更新される様子を見せられる（改善方針2）。
+  const [gaugeFilled, setGaugeFilled] = useState(false)
+  useEffect(() => {
+    // 初回コミット（見送る前の幅）が描画された後、次のコミットで見送った後の幅へ切り替える。
+    // 2回に分けること自体がCSSのtransitionを働かせるための意図的な仕組みで、外部システムとの
+    // 同期ではないが、他に見送る前→後の推移をアニメーションさせる手段がない。
+    // eslint-disable-next-line react/set-state-in-effect
+    if (outcome === 'skipped' && priorityGoal) setGaugeFilled(true)
+  }, [outcome, priorityGoal])
+
+  const beforePercent = priorityGoal
+    ? goalProgressPercent(priorityGoal, savingsBeforeThisDecision)
+    : 0
+  const afterPercent = priorityGoal
+    ? goalProgressPercent(priorityGoal, savingsBeforeThisDecision + amount)
+    : 0
+
   return (
     <div className="space-y-5">
-      {outcome === 'skipped' ? (
-        <div className="animate-pop-in rounded-2xl bg-emerald-50 p-6 text-center">
-          <p className="text-sm font-semibold text-emerald-700">守れました</p>
-          <p className="mt-1 text-4xl font-extrabold text-emerald-700">{formatYen(amount)}</p>
-          <p className="mt-2 text-sm text-emerald-800">ナイス判断です。</p>
-        </div>
-      ) : outcome === 'purchased' ? (
+      {outcome === 'purchased' ? (
         <div className="rounded-2xl bg-white p-6 text-center shadow-sm">
           <p className="text-sm font-semibold text-slate-500">記録しました</p>
           <p className="mt-1 text-3xl font-extrabold text-slate-900">{formatYen(amount)}</p>
           {reasonLabel ? <p className="mt-2 text-sm text-slate-500">理由：{reasonLabel}</p> : null}
         </div>
-      ) : (
+      ) : outcome === 'pending' ? (
         <div className="rounded-2xl bg-white p-6 text-center shadow-sm">
           <p className="text-sm font-semibold text-slate-500">保留にしました</p>
           <p className="mt-1 text-3xl font-extrabold text-slate-900">{formatYen(amount)}</p>
           <p className="mt-2 text-sm text-slate-500">24時間後に、もう一度確認します。</p>
         </div>
-      )}
+      ) : null}
 
       {outcome === 'skipped' && priorityGoal ? (
         <div className="rounded-2xl border border-sky-200 bg-sky-50 p-4">
           <p className="text-sm font-semibold text-sky-800">{priorityGoal.title}</p>
           <div className="mt-2 h-2 overflow-hidden rounded-full bg-sky-200/70">
             <div
-              className="h-full rounded-full bg-sky-600"
-              style={{
-                width: `${goalProgressPercent(priorityGoal, savingsBeforeThisDecision + amount)}%`,
-              }}
+              className="h-full rounded-full bg-sky-600 transition-[width] duration-700 ease-out"
+              style={{ width: `${gaugeFilled ? afterPercent : beforePercent}%` }}
             />
           </div>
           <p className="mt-1.5 text-xs text-sky-700">
-            {Math.round(goalProgressPercent(priorityGoal, savingsBeforeThisDecision) * 10) / 10}%
-            →{' '}
-            {Math.round(
-              goalProgressPercent(priorityGoal, savingsBeforeThisDecision + amount) * 10,
-            ) / 10}
-            %
+            {Math.round(beforePercent * 10) / 10}% → {Math.round(afterPercent * 10) / 10}%
           </p>
         </div>
       ) : null}

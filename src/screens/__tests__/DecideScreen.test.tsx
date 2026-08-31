@@ -1,10 +1,11 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { App } from '../../App'
 import { getPromptsForCategory } from '../../data/prompts'
 import { pendingAmount, totalConfirmedSavings } from '../../domain/decisions'
 import { STORAGE_KEY, type StoredData } from '../../storage/schema'
+import { stubPrefersReducedMotion } from '../../test/reducedMotion'
 import { seedCompletedOnboarding } from '../../test/seed'
 
 function renderDecideScreen() {
@@ -246,5 +247,77 @@ describe('パーソナライズ介入文（改善方針1）', () => {
     expect(prompts.length).toBeGreaterThan(0)
     const shown = prompts.filter((p) => screen.queryByText(p) !== null)
     expect(shown).toHaveLength(1)
+  })
+})
+
+describe('感情設計（改善方針2：揺さぶり画面と報酬画面）', () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+    seedCompletedOnboarding()
+  })
+  afterEach(() => {
+    cleanup()
+    vi.unstubAllGlobals()
+    vi.useRealTimers()
+  })
+
+  it('揺さぶり画面（判断ステップ）に金額とパーソナライズ文が表示される', () => {
+    renderDecideScreen()
+    fillInputAndProceed('180')
+
+    expect(screen.getByText('180円')).toBeInTheDocument()
+    // 価値尺度・目標が未登録のため、抽象的な問いかけのいずれかが表示される。
+    const prompts = getPromptsForCategory('convenience')
+    const shown = prompts.filter((p) => screen.queryByText(p) !== null)
+    expect(shown).toHaveLength(1)
+  })
+
+  it('「やめる」を選ぶと報酬画面に「守れました」が表示され、金額はカウントアップで目標値に落ち着く', () => {
+    stubPrefersReducedMotion(false)
+    vi.useFakeTimers()
+    renderDecideScreen()
+    fillInputAndProceed('800')
+    act(() => {
+      fireEvent.click(screen.getByRole('button', { name: 'やめる' }))
+    })
+
+    expect(screen.getByText('守れました')).toBeInTheDocument()
+    // アニメーション開始直後は目標値未満（0から始まる）。
+    expect(screen.queryByText('800円')).not.toBeInTheDocument()
+
+    act(() => {
+      vi.advanceTimersByTime(1000)
+    })
+    expect(screen.getByText('800円')).toBeInTheDocument()
+  })
+
+  it('視差効果を減らす設定が有効なときは、報酬画面の金額が最初から確定値で表示される', () => {
+    stubPrefersReducedMotion(true)
+    renderDecideScreen()
+    fillInputAndProceed('800')
+    fireEvent.click(screen.getByRole('button', { name: 'やめる' }))
+
+    expect(screen.getByText('守れました')).toBeInTheDocument()
+    expect(screen.getByText('800円')).toBeInTheDocument()
+  })
+
+  it('優先目標がある場合、見送り後の結果画面に見送る前後の進捗率が表示される', () => {
+    seedCompletedOnboarding({
+      goals: [
+        {
+          id: 'g1',
+          title: '旅行',
+          targetAmount: 10000,
+          isPriority: true,
+          createdAt: '2026-08-01T00:00:00.000Z',
+        },
+      ],
+    })
+    renderDecideScreen()
+    fillInputAndProceed('1000')
+    fireEvent.click(screen.getByRole('button', { name: 'やめる' }))
+
+    expect(screen.getByText('旅行')).toBeInTheDocument()
+    expect(screen.getByText('0% → 10%')).toBeInTheDocument()
   })
 })
