@@ -1,8 +1,9 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { App } from '../../App'
 import { STORAGE_KEY, type StoredData } from '../../storage/schema'
+import { stubNonSecureContextCrypto } from '../../test/nonSecureContext'
 
 function renderOnboarding() {
   return render(
@@ -99,5 +100,53 @@ describe('オンボーディング', () => {
       </MemoryRouter>,
     )
     expect(screen.getByRole('link', { name: '買うか迷っている' })).toBeInTheDocument()
+  })
+})
+
+describe('オンボーディング（http接続など、randomUUIDが使えない環境）', () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+    stubNonSecureContextCrypto()
+  })
+  afterEach(() => {
+    cleanup()
+    vi.unstubAllGlobals()
+  })
+
+  it('価値尺度を登録して完了すると、onboardingCompletedがtrueになりホームへ遷移する', () => {
+    renderOnboarding()
+
+    // 未完了状態ではオンボーディングが表示されている
+    expect(screen.getByText('はじめる前に')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /焼肉/ }))
+    fireEvent.click(screen.getByRole('button', { name: /次へ/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'スキップして完了する' }))
+
+    // React側の状態が更新され、ホームへ遷移している
+    expect(screen.getByRole('link', { name: '買うか迷っている' })).toBeInTheDocument()
+    expect(screen.queryByText('はじめる前に')).not.toBeInTheDocument()
+
+    // 保存側にも反映されている
+    const data = readStoredData()
+    expect(data.settings.onboardingCompleted).toBe(true)
+    expect(data.valueItems.map((v) => v.name)).toEqual(['焼肉'])
+  })
+
+  it('目標も登録して完了できる', () => {
+    renderOnboarding()
+    fireEvent.click(screen.getByRole('button', { name: /焼肉/ }))
+    fireEvent.click(screen.getByRole('button', { name: /次へ/ }))
+
+    fireEvent.change(screen.getByLabelText('目標名'), { target: { value: '旅行資金' } })
+    fireEvent.change(screen.getByLabelText('目標額'), { target: { value: '50000' } })
+    fireEvent.click(screen.getByRole('button', { name: '登録して完了する' }))
+
+    expect(screen.getByRole('link', { name: '買うか迷っている' })).toBeInTheDocument()
+
+    const data = readStoredData()
+    expect(data.settings.onboardingCompleted).toBe(true)
+    expect(data.goals).toHaveLength(1)
+    expect(data.goals[0].isPriority).toBe(true)
   })
 })
