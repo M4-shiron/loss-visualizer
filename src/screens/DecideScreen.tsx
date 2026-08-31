@@ -7,6 +7,7 @@ import { buildComparisonCards } from '../domain/comparison'
 import { totalConfirmedSavings } from '../domain/decisions'
 import { formatYen } from '../domain/format'
 import { findPriorityGoal, goalProgressPercent } from '../domain/goals'
+import { buildIntervention } from '../domain/intervention'
 import { PURCHASE_REASON_OPTIONS, purchaseReasonLabel } from '../domain/purchaseReason'
 import { MAX_AMOUNT_DIGITS } from '../domain/validation'
 import { pickRandomPrompt, visibleCategories, type PromptCategory } from '../data/prompts'
@@ -51,7 +52,17 @@ export function DecideScreen() {
     if (!canProceedToJudge || categoryId === null) return
     const beforeTotal = totalConfirmedSavings(data.decisions)
     setSavingsBeforeThisDecision(beforeTotal)
-    setPrompt(pickRandomPrompt(categoryId))
+    // ユーザー自身のデータを使った代替提案を優先し、作れないときだけ
+    // 抽象的な問いかけへフォールバックする（改善方針1）。
+    const intervention = buildIntervention({
+      amount,
+      categoryId,
+      valueItems: data.valueItems,
+      goals: data.goals,
+      decisions: data.decisions,
+      now: new Date(),
+    })
+    setPrompt(intervention?.text ?? pickRandomPrompt(categoryId))
     setComparisonCards(
       buildComparisonCards({
         amount,

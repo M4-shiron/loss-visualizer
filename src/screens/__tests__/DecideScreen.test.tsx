@@ -2,6 +2,7 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { App } from '../../App'
+import { getPromptsForCategory } from '../../data/prompts'
 import { pendingAmount, totalConfirmedSavings } from '../../domain/decisions'
 import { STORAGE_KEY, type StoredData } from '../../storage/schema'
 import { seedCompletedOnboarding } from '../../test/seed'
@@ -190,5 +191,60 @@ describe('カテゴリの表示・非表示', () => {
 
     expect(screen.queryByRole('button', { name: 'ゲーム課金' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'コンビニ' })).toBeInTheDocument()
+  })
+})
+
+describe('パーソナライズ介入文（改善方針1）', () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+  })
+  afterEach(() => cleanup())
+
+  it('価値尺度が登録されていると、それを使った代替提案が表示される', () => {
+    seedCompletedOnboarding({
+      valueItems: [
+        { id: 'v1', name: 'モニター', price: 20000, createdAt: '2026-08-01T00:00:00.000Z' },
+      ],
+    })
+    renderDecideScreen()
+    fillInputAndProceed('3000')
+
+    // 候補はランダムに選ばれるため、価値尺度ベースの言い回しのいずれかであればよい。
+    expect(
+      screen.getByText(
+        /モニターに回した方が満足しない？|同じ3,000円をモニターに寄せる|あと\d+回この判断を見送ればモニターに届く/,
+      ),
+    ).toBeInTheDocument()
+  })
+
+  it('優先目標だけがある場合は、目標を使った代替提案が表示される', () => {
+    seedCompletedOnboarding({
+      goals: [
+        {
+          id: 'g1',
+          title: '旅行',
+          targetAmount: 50000,
+          isPriority: true,
+          createdAt: '2026-08-01T00:00:00.000Z',
+        },
+      ],
+    })
+    renderDecideScreen()
+    fillInputAndProceed('3000')
+
+    expect(
+      screen.getByText(/旅行に回した方が近づかない？|見送れば旅行に.*ぶん近づく|旅行まであと/),
+    ).toBeInTheDocument()
+  })
+
+  it('使えるデータが何もなければ、従来の抽象的な問いかけが表示される', () => {
+    seedCompletedOnboarding()
+    renderDecideScreen()
+    fillInputAndProceed('3000')
+
+    const prompts = getPromptsForCategory('convenience')
+    expect(prompts.length).toBeGreaterThan(0)
+    const shown = prompts.filter((p) => screen.queryByText(p) !== null)
+    expect(shown).toHaveLength(1)
   })
 })

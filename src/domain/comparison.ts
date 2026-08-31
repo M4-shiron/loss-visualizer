@@ -14,8 +14,10 @@ const MAX_GENERAL_CARDS = 2
 /**
  * 金額以上の価値尺度のうち最も金額に近いものを選ぶ。
  * すべてが金額より安ければ、その中で最も高いものを選ぶ（§7）。
+ *
+ * 比較カードとパーソナライズ介入文（`intervention.ts`）で同じ選び方を使うため公開する。
  */
-function pickValueItem(valueItems: ValueItem[], amount: number): ValueItem | undefined {
+export function pickValueItemForAmount(valueItems: ValueItem[], amount: number): ValueItem | undefined {
   if (valueItems.length === 0) return undefined
 
   const atLeastAmount = valueItems.filter((v) => v.price >= amount)
@@ -131,7 +133,7 @@ export function buildComparisonCards(input: ComparisonInput): ComparisonCard[] {
   const { amount, valueItems, goals, totalSavings } = input
   const cards: ComparisonCard[] = []
 
-  const valueItem = pickValueItem(valueItems, amount)
+  const valueItem = pickValueItemForAmount(valueItems, amount)
   if (valueItem) cards.push(buildValueItemCard(valueItem, amount))
 
   const priorityGoal = goals.find((g) => g.isPriority)
