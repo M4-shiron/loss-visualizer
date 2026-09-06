@@ -139,6 +139,9 @@ function isSettings(value: unknown): value is Settings {
       return false
     }
   }
+  if (value.proPreviewEnabled !== undefined && typeof value.proPreviewEnabled !== 'boolean') {
+    return false
+  }
   return true
 }
 

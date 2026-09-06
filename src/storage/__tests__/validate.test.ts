@@ -37,3 +37,22 @@ describe('validateStoredData: hourlyWage（改善方針3で追加した任意項
     expect(validateStoredData(withSettings({ hourlyWage: Number.POSITIVE_INFINITY }))).toBe(false)
   })
 })
+
+describe('validateStoredData: proPreviewEnabled（改善方針4で追加した任意項目）', () => {
+  it('項目が無くても有効（既存ユーザーのデータを弾かない）', () => {
+    const legacy = createEmptyData()
+    expect('proPreviewEnabled' in legacy.settings).toBe(false)
+    expect(validateStoredData(legacy)).toBe(true)
+  })
+
+  it('真偽値なら有効', () => {
+    expect(validateStoredData(withSettings({ proPreviewEnabled: true }))).toBe(true)
+    expect(validateStoredData(withSettings({ proPreviewEnabled: false }))).toBe(true)
+  })
+
+  it('真偽値以外は無効', () => {
+    expect(validateStoredData(withSettings({ proPreviewEnabled: 'true' }))).toBe(false)
+    expect(validateStoredData(withSettings({ proPreviewEnabled: 1 }))).toBe(false)
+    expect(validateStoredData(withSettings({ proPreviewEnabled: null }))).toBe(false)
+  })
+})

@@ -191,6 +191,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       applyAndSave((prev) => mutations.updateNotificationSettings(prev, input))
     }
 
+    const setProPreview = (enabled: boolean): void => {
+      applyAndSave((prev) => mutations.setProPreview(prev, enabled))
+    }
+
     const updateHourlyWage = (hourlyWage: number | undefined): void => {
       applyAndSave((prev) => mutations.updateHourlyWage(prev, hourlyWage))
     }
@@ -231,6 +235,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       archiveExpiredPending,
       updateNotificationSettings,
       updateHourlyWage,
+      setProPreview,
       toggleCategoryVisibility,
       dismissWeeklySummary,
       dismissMonthlySummary,

@@ -38,6 +38,8 @@ function input(overrides: Partial<InterventionInput> = {}): InterventionInput {
     goals: [],
     decisions: [],
     now: NOW,
+    // 既定はPro。Loop 14までの挙動をそのまま検証し、無料側は個別のテストで明示する。
+    plan: 'pro',
     ...overrides,
   }
 }
@@ -340,6 +342,47 @@ describe('buildIntervention', () => {
         pickFirst,
       )
       expect(result?.text).not.toContain('働いた分')
+    })
+  })
+
+  describe('無料プランの境界（改善方針4）', () => {
+    it('無料では、時給を登録していても労働時間に触れない', () => {
+      const result = buildIntervention(
+        input({
+          plan: 'free',
+          amount: 3000,
+          valueItems: [valueItem('モニター', 20000)],
+          hourlyWage: 1200,
+        }),
+        pickFirst,
+      )
+      expect(result?.kind).toBe('valueItemSwap')
+      expect(result?.text).not.toContain('働いた分')
+    })
+
+    it('無料では、労働時間単独の候補も出さない', () => {
+      const result = buildIntervention(input({ plan: 'free', amount: 3000, hourlyWage: 1200 }))
+      expect(result).toBeUndefined()
+    })
+
+    it('無料では、履歴ベースの候補を出さない', () => {
+      const decisions = [decision(), decision()]
+      expect(buildIntervention(input({ plan: 'pro', decisions }))?.kind).toBe('categoryPattern')
+      expect(buildIntervention(input({ plan: 'free', decisions }))).toBeUndefined()
+    })
+
+    it('無料でも、価値尺度・節約目標を使った代替提案は出る（核心体験を残す）', () => {
+      const fromValueItem = buildIntervention(
+        input({ plan: 'free', valueItems: [valueItem('モニター', 20000)] }),
+        pickFirst,
+      )
+      expect(fromValueItem?.kind).toBe('valueItemSwap')
+
+      const fromGoal = buildIntervention(
+        input({ plan: 'free', goals: [goal('旅行', 50000)] }),
+        pickFirst,
+      )
+      expect(fromGoal?.kind).toBe('goalSwap')
     })
   })
 })

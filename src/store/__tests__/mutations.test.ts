@@ -17,6 +17,7 @@ import {
   toggleCategoryVisibility,
   updateDecision,
   updateGoal,
+  setProPreview,
   updateHourlyWage,
   updateNotificationSettings,
   updateValueItem,
@@ -359,6 +360,19 @@ describe('時給の更新（updateHourlyWage）', () => {
       weeklySummary: false,
       monthlySummary: false,
     })
+  })
+})
+
+describe('Proプレビューの切り替え（setProPreview）', () => {
+  it('有効・無効を切り替えられる', () => {
+    const enabled = setProPreview(createEmptyData(), true)
+    expect(enabled.settings.proPreviewEnabled).toBe(true)
+    expect(setProPreview(enabled, false).settings.proPreviewEnabled).toBe(false)
+  })
+
+  it('無効にしても登録済みの時給は消さない（Proへ戻せば復活する）', () => {
+    const data = setProPreview(updateHourlyWage(createEmptyData(), 1200), true)
+    expect(setProPreview(data, false).settings.hourlyWage).toBe(1200)
   })
 })
 

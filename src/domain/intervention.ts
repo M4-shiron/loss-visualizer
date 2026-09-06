@@ -2,6 +2,7 @@ import { getCategoryName } from '../data/prompts'
 import type { CategoryId, Decision, Goal, ValueItem } from '../types/domain'
 import { pickValueItemForAmount } from './comparison'
 import { effectiveDate, isConfirmedSkip, totalConfirmedSavings, totalSkipCount } from './decisions'
+import { canUse, type Plan } from './entitlement'
 import { formatYen } from './format'
 import { findPriorityGoal } from './goals'
 import { formatLaborTime, laborMinutesForAmount } from './laborTime'
@@ -45,6 +46,8 @@ export type InterventionInput = {
   now: Date
   /** 概算の時給（円）。未登録なら労働時間換算は一切使わない（改善方針3）。 */
   hourlyWage?: number
+  /** 現在のプラン。労働時間換算と履歴ベースの候補はProのみ（改善方針4）。 */
+  plan: Plan
 }
 
 /** 「あと何回で届く」を出す上限。これを超えると現実味がなく、逆に響かない。 */
@@ -230,6 +233,9 @@ function historyCandidates(input: InterventionInput): Intervention[] {
  * 文言を使うため、労働時間換算が単独の層として現れるのは両方とも未登録のときだけ。
  * 同じ層の中では毎回同じ文にならないよう、候補からランダムに1件選ぶ。
  *
+ * 無料プランでは労働時間換算と履歴ベースの層を使わない（改善方針4）。
+ * 価値尺度・節約目標を使った代替提案は無料でも出るため、核心の介入体験は残る。
+ *
  * どの層にも候補がない場合は`undefined`を返す。呼び出し側は
  * 抽象的な問いかけ（`pickRandomPrompt`）へフォールバックする。
  */
@@ -240,13 +246,16 @@ export function buildIntervention(
   if (input.amount < 1) return undefined
 
   // 3つの層すべてで同じ(amount, hourlyWage)を使うため、ここで1回だけ計算する。
-  const laborText = laborTimeText(input.amount, input.hourlyWage)
+  // 無料プランでは労働時間換算を使わないので、そもそも計算しない。
+  const laborText = canUse(input.plan, 'laborTime')
+    ? laborTimeText(input.amount, input.hourlyWage)
+    : undefined
 
   const tiers = [
     valueItemCandidates(input, laborText),
     goalCandidates(input, laborText),
     laborTimeOnlyCandidates(input, laborText),
-    historyCandidates(input),
+    canUse(input.plan, 'historyIntervention') ? historyCandidates(input) : [],
   ]
   const candidates = tiers.find((tier) => tier.length > 0)
   if (!candidates) return undefined

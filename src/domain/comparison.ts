@@ -2,6 +2,7 @@ import type { GeneralComparison } from '../data/comparisons'
 import { GENERAL_COMPARISONS } from '../data/comparisons'
 import type { Goal, ValueItem } from '../types/domain'
 import type { ComparisonCard } from './comparisonCard'
+import { canUse, type Plan } from './entitlement'
 import { formatYen } from './format'
 import { goalProgressPercent } from './goals'
 import { formatLaborTime, laborMinutesForAmount } from './laborTime'
@@ -137,6 +138,8 @@ export type ComparisonInput = {
   totalSavings: number
   /** 概算の時給（円）。未登録なら労働時間換算カードは出さない（改善方針3）。 */
   hourlyWage?: number
+  /** 現在のプラン。労働時間換算カードはProのみ（改善方針4）。 */
+  plan: Plan
 }
 
 /**
@@ -144,10 +147,11 @@ export type ComparisonInput = {
  * 優先順位: ①価値尺度 ②節約目標 ③労働時間換算 ④一般比較。
  * 合計は最大{@link MAX_CARDS}枚（購入直前の画面のため情報過多を避ける）。
  * 上位が枠を埋めた場合、労働時間換算・一般比較は表示されないことがある。
+ * 労働時間換算は無料プランでは出さない（改善方針4）。
  * 一般比較のみは仕様上の上限（{@link MAX_GENERAL_CARDS}枚）を別途守る。
  */
 export function buildComparisonCards(input: ComparisonInput): ComparisonCard[] {
-  const { amount, valueItems, goals, totalSavings, hourlyWage } = input
+  const { amount, valueItems, goals, totalSavings, hourlyWage, plan } = input
   const cards: ComparisonCard[] = []
 
   const valueItem = pickValueItemForAmount(valueItems, amount)
@@ -158,7 +162,7 @@ export function buildComparisonCards(input: ComparisonInput): ComparisonCard[] {
     cards.push(buildGoalCard(priorityGoal, totalSavings, amount))
   }
 
-  if (hourlyWage !== undefined && cards.length < MAX_CARDS) {
+  if (hourlyWage !== undefined && canUse(plan, 'laborTime') && cards.length < MAX_CARDS) {
     const laborTimeCard = buildLaborTimeCard(amount, hourlyWage)
     if (laborTimeCard) cards.push(laborTimeCard)
   }

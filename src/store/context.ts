@@ -83,6 +83,11 @@ export type AppStateContextValue = {
   updateNotificationSettings: (input: Partial<NotificationSettings>) => void
   /** 概算の時給（円）を登録・変更する。`undefined`を渡すと未登録に戻す（改善方針3）。 */
   updateHourlyWage: (hourlyWage: number | undefined) => void
+  /**
+   * Proプレビューの有効・無効を切り替える（改善方針4）。購入ではない。
+   * 課金が存在しない現段階で、無料/Pro境界を実際に切り替える唯一の手段。
+   */
+  setProPreview: (enabled: boolean) => void
   /** カテゴリの表示・非表示を切り替える。表示が0件になる変更は無視される。 */
   toggleCategoryVisibility: (categoryId: CategoryId) => void
   /** 今週の週次まとめを閉じる。同じ週の間は再表示しない。 */

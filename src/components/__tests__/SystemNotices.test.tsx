@@ -32,6 +32,7 @@ function renderWithContext(overrides: Partial<AppStateContextValue>) {
     archiveExpiredPending: vi.fn(),
     updateNotificationSettings: vi.fn(),
     updateHourlyWage: vi.fn(),
+    setProPreview: vi.fn(),
     toggleCategoryVisibility: vi.fn(),
     dismissWeeklySummary: vi.fn(),
     dismissMonthlySummary: vi.fn(),

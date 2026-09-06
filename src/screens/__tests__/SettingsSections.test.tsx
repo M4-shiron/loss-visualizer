@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { App } from '../../App'
 import { STORAGE_KEY, type StoredData } from '../../storage/schema'
 import { seedCompletedOnboarding } from '../../test/seed'
-import type { Decision } from '../../types/domain'
+import type { Decision, Settings } from '../../types/domain'
 
 function renderSettings() {
   return render(
@@ -181,14 +181,70 @@ describe('設定画面: 全データのリセット', () => {
   })
 })
 
+describe('設定画面: Proプレビュー（改善方針4）', () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+  })
+  afterEach(() => cleanup())
+
+  it('初期状態は無料で、Pro側の時給の設定項目は出ない', () => {
+    seedCompletedOnboarding()
+    renderSettings()
+
+    expect(screen.getByRole('switch', { name: 'Proの機能を有効にする' })).toHaveAttribute(
+      'aria-checked',
+      'false',
+    )
+    expect(screen.queryByRole('region', { name: '時給の目安' })).not.toBeInTheDocument()
+  })
+
+  it('有効にすると保存され、Pro側の設定項目が現れる', () => {
+    seedCompletedOnboarding()
+    renderSettings()
+
+    fireEvent.click(screen.getByRole('switch', { name: 'Proの機能を有効にする' }))
+
+    expect(screen.getByRole('region', { name: '時給の目安' })).toBeInTheDocument()
+    expect(readStoredData().settings.proPreviewEnabled).toBe(true)
+
+    cleanup()
+    renderSettings()
+    expect(screen.getByRole('region', { name: '時給の目安' })).toBeInTheDocument()
+  })
+
+  it('無料に戻しても、登録済みの時給は消えず、確認と削除はできる', () => {
+    seedCompletedOnboarding({ settings: { proPreviewEnabled: true, hourlyWage: 1200 } })
+    renderSettings()
+
+    fireEvent.click(screen.getByRole('switch', { name: 'Proの機能を有効にする' }))
+
+    const section = within(screen.getByRole('region', { name: '時給の目安' }))
+    expect(section.getByText('1,200円 / 時間')).toBeInTheDocument()
+    // 無料では使わない設定なので、登録・編集の導線は出さない。
+    expect(section.queryByRole('button', { name: '編集' })).not.toBeInTheDocument()
+    expect(section.queryByRole('button', { name: '＋時給を登録する' })).not.toBeInTheDocument()
+    expect(readStoredData().settings.hourlyWage).toBe(1200)
+
+    // 自分が入れた値を消せない状態にはしない。
+    fireEvent.click(section.getByRole('button', { name: '削除' }))
+    expect(readStoredData().settings.hourlyWage).toBeUndefined()
+    expect(screen.queryByRole('region', { name: '時給の目安' })).not.toBeInTheDocument()
+  })
+})
+
 describe('設定画面: 時給の目安（改善方針3）', () => {
   beforeEach(() => {
     window.localStorage.clear()
   })
   afterEach(() => cleanup())
 
+  /** 時給はPro側の機能（改善方針4）なので、この節はProプレビュー有効から始める。 */
+  function seedPro(settings: Partial<Settings> = {}): void {
+    seedCompletedOnboarding({ settings: { proPreviewEnabled: true, ...settings } })
+  }
+
   it('未登録のときは登録ボタンが表示される', () => {
-    seedCompletedOnboarding()
+    seedPro()
     renderSettings()
 
     const section = within(screen.getByRole('region', { name: '時給の目安' }))
@@ -196,7 +252,7 @@ describe('設定画面: 時給の目安（改善方針3）', () => {
   })
 
   it('登録すると保存され、再読み込み後も保持される', () => {
-    seedCompletedOnboarding()
+    seedPro()
     renderSettings()
 
     const section = within(screen.getByRole('region', { name: '時給の目安' }))
@@ -215,13 +271,7 @@ describe('設定画面: 時給の目安（改善方針3）', () => {
   })
 
   it('削除すると未登録に戻る', () => {
-    seedCompletedOnboarding({
-      settings: {
-        onboardingCompleted: true,
-        notifications: { pendingReminder: true, weeklySummary: false, monthlySummary: false },
-        hourlyWage: 1200,
-      },
-    })
+    seedPro({ hourlyWage: 1200 })
     renderSettings()
 
     const section = within(screen.getByRole('region', { name: '時給の目安' }))
@@ -233,7 +283,7 @@ describe('設定画面: 時給の目安（改善方針3）', () => {
   })
 
   it('未入力のままでは保存できない', () => {
-    seedCompletedOnboarding()
+    seedPro()
     renderSettings()
 
     const section = within(screen.getByRole('region', { name: '時給の目安' }))

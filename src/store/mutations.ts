@@ -147,6 +147,10 @@ export function updateHourlyWage(prev: StoredData, hourlyWage: number | undefine
   return { ...prev, settings: { ...prev.settings, hourlyWage } }
 }
 
+export function setProPreview(prev: StoredData, enabled: boolean): StoredData {
+  return { ...prev, settings: { ...prev.settings, proPreviewEnabled: enabled } }
+}
+
 export function updateNotificationSettings(
   prev: StoredData,
   update: Partial<NotificationSettings>,

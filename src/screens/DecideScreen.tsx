@@ -4,6 +4,7 @@ import { ComparisonCardView } from '../components/ComparisonCardView'
 import { achievementLabel } from '../domain/achievements'
 import type { ComparisonCard } from '../domain/comparisonCard'
 import { buildComparisonCards } from '../domain/comparison'
+import { planOf } from '../domain/entitlement'
 import { totalConfirmedSavings } from '../domain/decisions'
 import { formatYen } from '../domain/format'
 import { findPriorityGoal, goalProgressPercent } from '../domain/goals'
@@ -53,6 +54,7 @@ export function DecideScreen() {
     if (!canProceedToJudge || categoryId === null) return
     const beforeTotal = totalConfirmedSavings(data.decisions)
     setSavingsBeforeThisDecision(beforeTotal)
+    const plan = planOf(data.settings)
     // ユーザー自身のデータを使った代替提案を優先し、作れないときだけ
     // 抽象的な問いかけへフォールバックする（改善方針1）。
     const intervention = buildIntervention({
@@ -63,6 +65,7 @@ export function DecideScreen() {
       decisions: data.decisions,
       now: new Date(),
       hourlyWage: data.settings.hourlyWage,
+      plan,
     })
     setPrompt(intervention?.text ?? pickRandomPrompt(categoryId))
     setComparisonCards(
@@ -72,6 +75,7 @@ export function DecideScreen() {
         goals: data.goals,
         totalSavings: beforeTotal,
         hourlyWage: data.settings.hourlyWage,
+        plan,
       }),
     )
     setStep('judge')

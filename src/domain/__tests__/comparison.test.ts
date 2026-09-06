@@ -30,6 +30,7 @@ describe('比較カードの組み立て', () => {
       valueItems: [],
       goals: [],
       totalSavings: 0,
+      plan: 'pro',
     })
     expect(cards.length).toBeGreaterThan(0)
     expect(cards.every((c) => c.kind === 'general')).toBe(true)
@@ -41,6 +42,7 @@ describe('比較カードの組み立て', () => {
       valueItems: [],
       goals: [],
       totalSavings: 0,
+      plan: 'pro',
     })
     expect(cards.length).toBeLessThanOrEqual(2)
   })
@@ -51,6 +53,7 @@ describe('比較カードの組み立て', () => {
       valueItems: [makeValueItem({})],
       goals: [makeGoal({})],
       totalSavings: 10000,
+      plan: 'pro',
     })
     expect(cards[0].kind).toBe('valueItem')
     expect(cards[1].kind).toBe('goal')
@@ -62,6 +65,7 @@ describe('比較カードの組み立て', () => {
       valueItems: [makeValueItem({})],
       goals: [makeGoal({})],
       totalSavings: 10000,
+      plan: 'pro',
     })
     expect(cards.length).toBeLessThanOrEqual(3)
   })
@@ -72,6 +76,7 @@ describe('比較カードの組み立て', () => {
       valueItems: [makeValueItem({})],
       goals: [makeGoal({})],
       totalSavings: 10000,
+      plan: 'pro',
     })
     const generalCards = cards.filter((c) => c.kind === 'general')
     expect(generalCards.length).toBe(1)
@@ -83,6 +88,7 @@ describe('比較カードの組み立て', () => {
       valueItems: [],
       goals: [makeGoal({ isPriority: false })],
       totalSavings: 10000,
+      plan: 'pro',
     })
     expect(cards.some((c) => c.kind === 'goal')).toBe(false)
   })
@@ -93,6 +99,7 @@ describe('比較カードの組み立て', () => {
       valueItems: [makeValueItem({ name: '焼肉', price: 4000 })],
       goals: [],
       totalSavings: 0,
+      plan: 'pro',
     })
     expect(cards[0].text).toBe('焼肉4,000円の20%')
   })
@@ -103,6 +110,7 @@ describe('比較カードの組み立て', () => {
       valueItems: [makeValueItem({ name: 'ゲームソフト', price: 7000 })],
       goals: [],
       totalSavings: 0,
+      plan: 'pro',
     })
     expect(cards[0].text).toContain('倍')
   })
@@ -116,6 +124,7 @@ describe('比較カードの組み立て', () => {
       ],
       goals: [],
       totalSavings: 0,
+      plan: 'pro',
     })
     expect(cards[0].title).toBe('安め')
   })
@@ -129,6 +138,7 @@ describe('比較カードの組み立て', () => {
       ],
       goals: [],
       totalSavings: 0,
+      plan: 'pro',
     })
     expect(cards[0].title).toBe('高め')
   })
@@ -139,6 +149,7 @@ describe('比較カードの組み立て', () => {
       valueItems: [],
       goals: [makeGoal({ title: '旅行資金', targetAmount: 50000 })],
       totalSavings: 16000,
+      plan: 'pro',
     })
     const goalCard = cards.find((c) => c.kind === 'goal')
     expect(goalCard?.text).toBe('旅行資金の32%')
@@ -151,6 +162,7 @@ describe('比較カードの組み立て', () => {
       valueItems: [],
       goals: [],
       totalSavings: 0,
+      plan: 'pro',
     })
     expect(cards[0].text).toMatch(/1(個|回|本|杯|袋|枚|足|着|台|か月)分$/)
   })
@@ -161,6 +173,7 @@ describe('比較カードの組み立て', () => {
       valueItems: [],
       goals: [],
       totalSavings: 0,
+      plan: 'pro',
     })
     if (cards.length === 2) {
       expect(cards[0].title).not.toBe(cards[1].title)
@@ -170,14 +183,14 @@ describe('比較カードの組み立て', () => {
   it('すべての価格帯（100〜50,000円）でクラッシュせず1枚以上返す', () => {
     const amounts = [100, 180, 500, 1000, 3000, 8000, 15000, 30000, 50000]
     for (const amount of amounts) {
-      const cards = buildComparisonCards({ amount, valueItems: [], goals: [], totalSavings: 0 })
+      const cards = buildComparisonCards({ amount, valueItems: [], goals: [], totalSavings: 0, plan: 'pro' })
       expect(cards.length).toBeGreaterThan(0)
     }
   })
 
   describe('労働時間換算（改善方針3）', () => {
     it('時給が未登録なら労働時間換算カードは出さない', () => {
-      const cards = buildComparisonCards({ amount: 800, valueItems: [], goals: [], totalSavings: 0 })
+      const cards = buildComparisonCards({ amount: 800, valueItems: [], goals: [], totalSavings: 0, plan: 'pro' })
       expect(cards.some((c) => c.kind === 'laborTime')).toBe(false)
     })
 
@@ -187,6 +200,7 @@ describe('比較カードの組み立て', () => {
         valueItems: [makeValueItem({})],
         goals: [makeGoal({})],
         totalSavings: 10000,
+        plan: 'pro',
         hourlyWage: 1200,
       })
       expect(cards.map((c) => c.kind)).toEqual(['valueItem', 'goal', 'laborTime'])
@@ -198,6 +212,7 @@ describe('比較カードの組み立て', () => {
         valueItems: [],
         goals: [],
         totalSavings: 0,
+        plan: 'pro',
         hourlyWage: 1200,
       })
       const laborCard = cards.find((c) => c.kind === 'laborTime')
@@ -210,6 +225,7 @@ describe('比較カードの組み立て', () => {
         valueItems: [],
         goals: [],
         totalSavings: 0,
+        plan: 'pro',
         hourlyWage: 1200,
       })
       const laborCard = cards.find((c) => c.kind === 'laborTime')
@@ -222,6 +238,7 @@ describe('比較カードの組み立て', () => {
         valueItems: [makeValueItem({})],
         goals: [makeGoal({})],
         totalSavings: 10000,
+        plan: 'pro',
         hourlyWage: 1200,
       })
       expect(cards.some((c) => c.kind === 'general')).toBe(false)
@@ -235,9 +252,39 @@ describe('比較カードの組み立て', () => {
         valueItems: [],
         goals: [],
         totalSavings: 0,
+        plan: 'pro',
         hourlyWage: 1200,
       })
       expect(cards.some((c) => c.kind === 'laborTime')).toBe(false)
+    })
+  })
+
+  describe('無料プランの境界（改善方針4）', () => {
+    it('無料では、時給を登録していても労働時間換算カードを出さない', () => {
+      const cards = buildComparisonCards({
+        amount: 3000,
+        valueItems: [],
+        goals: [],
+        totalSavings: 0,
+        plan: 'free',
+        hourlyWage: 1200,
+      })
+      expect(cards.some((c) => c.kind === 'laborTime')).toBe(false)
+      // 枠が空くので一般比較で埋まる。カードが0枚になる空っぽの画面にはしない。
+      expect(cards.length).toBeGreaterThan(0)
+    })
+
+    it('無料でも、価値尺度・目標のカードはこれまでどおり出る', () => {
+      const cards = buildComparisonCards({
+        amount: 800,
+        valueItems: [makeValueItem({})],
+        goals: [makeGoal({})],
+        totalSavings: 10000,
+        plan: 'free',
+        hourlyWage: 1200,
+      })
+      expect(cards[0].kind).toBe('valueItem')
+      expect(cards[1].kind).toBe('goal')
     })
   })
 })

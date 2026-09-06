@@ -328,22 +328,17 @@ describe('労働時間換算（改善方針3）', () => {
   })
   afterEach(() => cleanup())
 
+  // Proでも時給が無ければ出ないことを見るテストなので、プランの側で落ちないようProにする。
   it('時給が未登録なら、労働時間換算カードは表示されない', () => {
-    seedCompletedOnboarding()
+    seedCompletedOnboarding({ settings: { proPreviewEnabled: true } })
     renderDecideScreen()
     fillInputAndProceed('3000')
 
     expect(screen.queryByText('労働時間換算')).not.toBeInTheDocument()
   })
 
-  it('時給を登録していると、比較カードに労働時間換算が表示される', () => {
-    seedCompletedOnboarding({
-      settings: {
-        onboardingCompleted: true,
-        notifications: { pendingReminder: true, weeklySummary: false, monthlySummary: false },
-        hourlyWage: 1200,
-      },
-    })
+  it('Proプレビュー中に時給を登録していると、比較カードに労働時間換算が表示される', () => {
+    seedCompletedOnboarding({ settings: { hourlyWage: 1200, proPreviewEnabled: true } })
     renderDecideScreen()
     fillInputAndProceed('3000')
 
@@ -356,11 +351,7 @@ describe('労働時間換算（改善方針3）', () => {
       valueItems: [
         { id: 'v1', name: 'モニター', price: 20000, createdAt: '2026-08-01T00:00:00.000Z' },
       ],
-      settings: {
-        onboardingCompleted: true,
-        notifications: { pendingReminder: true, weeklySummary: false, monthlySummary: false },
-        hourlyWage: 1200,
-      },
+      settings: { hourlyWage: 1200, proPreviewEnabled: true },
     })
     // 候補はランダムに選ばれる（reachCount候補は労働時間に触れない）ため、
     // 労働時間と組み合わさった候補が確実に選ばれるよう固定する。
@@ -371,6 +362,25 @@ describe('労働時間換算（改善方針3）', () => {
 
     expect(
       screen.getByText('この3,000円は約2時間30分働いた分。モニターに回した方が満足しない？'),
+    ).toBeInTheDocument()
+  })
+
+  it('無料プランでは、時給を登録していても労働時間換算が出ない（改善方針4）', () => {
+    seedCompletedOnboarding({
+      valueItems: [
+        { id: 'v1', name: 'モニター', price: 20000, createdAt: '2026-08-01T00:00:00.000Z' },
+      ],
+      settings: { hourlyWage: 1200 },
+    })
+    const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0)
+    renderDecideScreen()
+    fillInputAndProceed('3000')
+    randomSpy.mockRestore()
+
+    expect(screen.queryByText('労働時間換算')).not.toBeInTheDocument()
+    // 無料でも価値尺度を使った代替提案は出る（核心体験は残す）。
+    expect(
+      screen.getByText('その3,000円、モニターに回した方が満足しない？'),
     ).toBeInTheDocument()
   })
 })
