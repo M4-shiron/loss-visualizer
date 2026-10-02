@@ -78,7 +78,8 @@ READMEの非対象機能にある「将来の年収や職業を断定する金�
 | 13 | Emotional UI Redesign | 方針2 | 揺さぶり画面と報酬画面の感情差、全体のトーン調整 |
 | 14 | Labor Time Comparison | 方針3 | 時給設定と労働時間換算、比較優先順位への統合 |
 | 15 | Pro Architecture Preparation | 方針4 | 無料/Pro境界の整理と、課金なしで切り替えられる内部構造 |
-| 16 | Real Usage Review | — | 実利用にもとづく振り返りと次の判断 |
+| 16 | Release Readiness | — | 公開品質の仕上げ（アイコン・ホーム画面追加・OGP・データの扱いページ・配信ヘッダー）。2026-10-02にユーザーの依頼で追加 |
+| 17 | Real Usage Review | — | 実利用にもとづく振り返りと次の判断 |
 
 ### 順序を入れ替えてよい場合
 

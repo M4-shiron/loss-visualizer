@@ -6,6 +6,7 @@ export const ROUTES = {
   history: '/history',
   pending: '/pending',
   settings: '/settings',
+  about: '/about',
 } as const
 
 export type RoutePath = (typeof ROUTES)[keyof typeof ROUTES]

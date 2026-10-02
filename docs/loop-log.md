@@ -968,3 +968,35 @@ Chromeで`http://10.201.168.239:5173/`（LAN内http）を操作して確認：�
 公開環境での確認（Chrome）：`/`・`/history`・`/pending`・`/settings`・`/decide` すべて直接開けて200（SPAフォールバックは従来どおり）。新規状態からオンボーディング完了 → 初期は無料でPro項目なし → トグルONで時給設定が出現・登録 → 判断画面に労働時間換算 → OFFで消えて一般比較が枠を埋め、時給は読み取り専用で残る。コンソールにエラーなし。
 
 **未確認：** 実機iPhone・iOS Safari・Edge・Firefox。ローカルのビルド出力とVercel側のハッシュは一致しないが、これは改行コード（CRLF/LF）の差によるもので、内容は一致している。
+
+---
+
+## Loop 16: Release Readiness（2026-10-02）
+
+ユーザーの依頼「Webアプリとしてリリースできるように完成させて」により、Real Usage Reviewの前に公開品質の仕上げLoopを挟んだ（Real Usage ReviewはLoop 17へ繰り下げ）。**機能・データ構造・無料/Pro境界は変えていない。**
+
+### 実装内容
+
+- アイコン：Viteの初期ロゴのままだった`favicon.svg`を独自デザイン（濃紺の角丸＋エメラルドのコインに一時停止マーク＝「立ち止まる」）へ差し替え。PNG（180/192/512/maskable 512）とOGP画像（1200×630）を生成
+- `public/manifest.webmanifest`（新規）と`index.html`のメタ情報：ホーム画面追加（standalone表示）、apple-touch-icon、OGP/Twitterカード、description、noscript
+- `src/screens/AboutScreen.tsx`（新規、`/about`）：アプリの説明、データとプライバシー（端末内保存のみ・送信なし・解析なし・Vercelのアクセスログ）、ホーム画面追加の手順とiOS Safariの7日データ削除の注意、表示についての注意（守れた金額は預金ではない等）。オンボーディング前でも読めるよう`RequireOnboarding`の外に置き、設定画面とオンボーディング画面から導線を置いた
+- `vercel.json`：CSP・nosniff・Referrer-Policy・X-Frame-Options・Permissions-Policy、`/assets/*`の長期キャッシュ
+- 未使用だった`src/components/Placeholder.tsx`を削除。バージョンを1.0.0へ
+
+### 主要な判断
+
+- **アプリ名は未決事項のため変えなかった**（ホーム画面上の名前も「Loss Visualizer」）。キャッチコピー「買う前に、ひと呼吸。」はタイトル・OGPのみで、容易に変更できる
+- **Service Worker（オフライン対応）は入れなかった。** キャッシュ更新の不具合リスクに対して、ネット接続前提の現状では得るものが小さい。ホーム画面追加はマニフェストだけで成立する
+- **バックアップ（JSONの書き出し・読み込み）は新機能にあたるため実装せず、提案に留めた**
+- 「戻る」は`location.key === 'default'`（アプリ内の最初の画面）ならホームへ、そうでなければ1つ前へ。直接開いたときにサイト外へ出ないようにするため
+
+### テスト結果
+
+29ファイル317件成功（従来309件＋新規8件：`AboutScreen.test.tsx`5件、`tests/publicAssets.test.ts`3件）/ 型チェック0件 / oxlint 0件 / 本番ビルド成功・警告0件（gzip後 JS 97.35kB、CSS 6.29kB）
+
+表示確認：内蔵ブラウザ（Chromium、375px幅）で`/onboarding`→`/about`の導線、横スクロールなし、アイコン・マニフェストの配信、コンソールエラーなし。**Edge**（ヘッドレス）で`/about`・`/onboarding`の表示崩れなし。
+
+### 未解決事項
+
+- **未確認：Firefox（この環境に未インストール）、iOS Safari・実機iPhone（ホーム画面追加後のアイコン・全画面表示を含む）**
+- バックアップ機能の要否（iOS Safariの7日削除への備え）はユーザー判断待ち

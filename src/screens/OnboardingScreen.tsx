@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { NameAmountForm } from '../components/NameAmountForm'
 import { formatYen } from '../domain/format'
 import { ROUTES } from '../routes'
@@ -77,6 +77,12 @@ export function OnboardingScreen() {
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">はじめる前に</h1>
           <p className="mt-1 text-sm text-slate-500">
             1分ほどで終わります。あとから変更できます。
+          </p>
+          <p className="mt-1 text-xs text-slate-500">
+            記録はこの端末の中だけに保存されます。
+            <Link to={ROUTES.about} className="font-bold text-emerald-700 underline">
+              データの扱いについて
+            </Link>
           </p>
         </header>
 

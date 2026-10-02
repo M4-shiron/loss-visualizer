@@ -2,19 +2,45 @@
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
-    <meta name="theme-color" content="#f8fafc" />
+    <title>Loss Visualizer — 買う前に、ひと呼吸</title>
     <meta
       name="description"
-      content="買う前に一度立ち止まり、買わなかったことで守れた金額を可視化するアプリ"
+      content="買う前に一度立ち止まり、買わなかったことで守れた金額を可視化するアプリ。無料・登録不要で、記録はこの端末の中だけに保存されます。"
     />
-    <title>Loss Visualizer</title>
+    <meta name="theme-color" content="#f8fafc" />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+
+    <!-- iPhoneで「ホーム画面に追加」したときにアプリとして全画面で開く -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Loss Visualizer" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+
+    <!-- リンクを共有したときのプレビュー（OGP） -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Loss Visualizer" />
+    <meta property="og:title" content="Loss Visualizer — 買う前に、ひと呼吸" />
+    <meta
+      property="og:description"
+      content="買う前に一度立ち止まり、やめた金額を「守れたお金」として可視化する衝動買いストッパー。無料・登録不要。"
+    />
+    <meta property="og:url" content="https://loss-visualizer.vercel.app/" />
+    <meta property="og:image" content="https://loss-visualizer.vercel.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="ja_JP" />
+    <meta name="twitter:card" content="summary_large_image" />
   </head>
   <body>
+    <noscript>このアプリを使うにはJavaScriptを有効にしてください。</noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

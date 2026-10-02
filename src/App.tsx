@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppLayout } from './components/AppLayout'
+import { AboutScreen } from './screens/AboutScreen'
 import { RequireOnboarding } from './components/RequireOnboarding'
 import { SystemNotices } from './components/SystemNotices'
 import { DecideScreen } from './screens/DecideScreen'
@@ -32,6 +33,8 @@ export function App() {
         </Route>
 
         <Route path={ROUTES.onboarding} element={<OnboardingScreen />} />
+        {/* データの扱いの説明は、オンボーディング前でも読めるようにする */}
+        <Route path={ROUTES.about} element={<AboutScreen />} />
 
         <Route path="*" element={<Navigate to={ROUTES.home} replace />} />
       </Routes>
