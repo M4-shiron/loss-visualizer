@@ -1,5 +1,37 @@
 # Loss Visualizer
 
+**買う前に、ひと呼吸。** 買うか迷っている数十秒に介入して、衝動買いを止めるWebアプリです。
+
+**公開URL：https://loss-visualizer.vercel.app** （スマートフォンのブラウザで開き、ホーム画面に追加するとアプリのように使えます）
+
+<p>
+  <img src="docs/images/screen-home.png" alt="ホーム画面：今月守れた金額と目標への進捗" width="260" />
+  <img src="docs/images/screen-decide.png" alt="購入判断画面：3,000円を焼肉や旅行目標と比べて見せる" width="260" />
+</p>
+
+- 金額を入れると、自分が本当に価値を感じるもの（例：焼肉4,000円）や貯金目標と比べて見せる
+- 「やめる」を選ぶと、その金額を「守れたお金」として積み上げる。「買う」「あとで考える」も同じ重みで扱い、買った人を責めない
+- アカウント登録なし・サーバーなし。記録は端末のブラウザ内だけに保存する
+
+| | |
+|---|---|
+| 技術 | React 19 / TypeScript / Vite / Tailwind CSS 4 / React Router 7 |
+| テスト | Vitest + Testing Library（317件） |
+| 公開 | Vercel |
+| 開発の進め方 | 1機能ずつの「ループ開発」（記録：[docs/loop-log.md](./docs/loop-log.md)）。AIコーディングツール（Claude Code）で実装し、仕様・完成基準・実機確認は作者が担当 |
+
+### 手元で動かす
+
+```bash
+npm install
+npm run dev      # 開発サーバー
+npm test         # 自動テスト
+npm run build    # 本番ビルド
+```
+
+---
+
+
 ## 概要
 
 購入前の迷っている瞬間に、不要な買い物によって失う選択肢や、見送ることで取り戻せる価値を見せる浪費防止アプリ。
